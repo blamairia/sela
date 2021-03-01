@@ -1,0 +1,63 @@
+# Laravel Framework
+/vendor
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*.log
+
+# Environment
+.env
+.env.backup
+.env.*.local
+
+# Compiled assets
+/public/js/bundle
+/public/js/main.js
+/public/mix-manifest.json
+
+# User uploads (keep structure, ignore contents)
+/public/images/products/*
+!/public/images/products/.gitkeep
+/public/images/vendor
+/storage/app/public/backup/*
+!/storage/app/public/backup/.gitkeep
+
+# IDE & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testing
+.phpunit.result.cache
+.phpunit.cache/
+coverage/
+
+# Build tools
+npm-debug.log
+yarn-error.log
+yarn.lock
+
+# Laravel Sail / Docker
+docker-compose.override.yml
+.sail/
+
+# Homestead / Vagrant
+Homestead.json
+Homestead.yaml
+.vagrant/
+
+# Composer
+composer.lock
+
+# Miscellaneous
+*.bak
+*.tmp
+*.temp

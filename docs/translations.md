@@ -1,0 +1,5 @@
+# Translations
+
+- English
+- Arabic
+- Spanish
