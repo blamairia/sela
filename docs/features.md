@@ -1,5 +1,5 @@
 # Features
 
-## Barcodes
-- Barcode printing
-- Scanner support
+## Products
+- Categories
+- Brands
