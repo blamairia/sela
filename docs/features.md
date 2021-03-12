@@ -1,8 +1,5 @@
 # Features
 
-## Products
-- Categories
-- Brands
-
-## Customers
-- Customer management
+## Sales & Purchases
+- Sales
+- Purchases
