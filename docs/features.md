@@ -1,5 +1,5 @@
 # Features
 
-## Sales & Purchases
-- Sales
-- Purchases
+## Suppliers
+- Supplier management
+- Supplier reports
