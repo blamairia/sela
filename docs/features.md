@@ -1,5 +1,4 @@
 # Features
 
-## Suppliers
-- Supplier management
-- Supplier reports
+## Currencies
+- Multi-currency support
