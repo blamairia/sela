@@ -1,4 +1,4 @@
 # Changelog
 
-## v1.1.0
-- Stock alerts
+## v1.2.0
+- Quotation system
