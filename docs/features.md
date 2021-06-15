@@ -1,4 +1,5 @@
 # Features
 
-## Currencies
-- Multi-currency support
+## Returns
+- Sales returns
+- Purchase returns
