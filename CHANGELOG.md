@@ -1,4 +1,4 @@
 # Changelog
 
-## v1.2.0
-- Quotation system
+## v1.3.0
+- HRM module started
