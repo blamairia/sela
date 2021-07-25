@@ -1,5 +1,4 @@
-# HRM
+# HRM Module
 
-## Payroll
-- Salary management
-- Deductions
+- Departments
+- Designations
