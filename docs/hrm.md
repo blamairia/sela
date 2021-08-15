@@ -1,4 +1,4 @@
 # HRM Module
 
-- Departments
-- Designations
+- Attendance tracking
+- Leave management
