@@ -1,4 +1,4 @@
 # Changelog
 
-## v1.3.0
-- HRM module started
+## v2.0.0-beta
+- Multi-warehouse support
