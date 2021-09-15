@@ -1,5 +1,5 @@
 # Features
 
-## Returns
-- Sales returns
-- Purchase returns
+## Warehouses
+- Multi-warehouse
+- Stock transfers
