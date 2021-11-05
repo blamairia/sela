@@ -1,5 +1,4 @@
 # Accounting
 
-## Expenses
-- Expense tracking
-- Categories
+## Deposits
+- Deposit tracking
