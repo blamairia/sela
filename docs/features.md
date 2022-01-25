@@ -1,5 +1,5 @@
 # Features
 
-## Warehouses
-- Multi-warehouse
-- Stock transfers
+## Notifications
+- SMS notifications
+- Twilio support
