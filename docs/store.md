@@ -1,4 +1,4 @@
 # Online Store
 
-- Product catalog
-- Shopping cart
+- Checkout flow
+- Order management
