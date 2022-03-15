@@ -1,4 +1,4 @@
 # Changelog
 
-## v2.1.0
-- Account management
+## v2.2.0
+- Multi-language support
