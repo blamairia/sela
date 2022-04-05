@@ -1,4 +1,4 @@
 # Changelog
 
-## v2.2.0
-- Multi-language support
+## v3.0.0-rc1
+- Bug fixes
