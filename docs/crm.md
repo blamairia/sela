@@ -1,4 +1,4 @@
-# CRM Module
+# CRM
 
-- Customer insights
-- Communication history
+- Email tracking
+- SMS history
