@@ -1,4 +1,5 @@
-# HRM Module
+# HRM
 
-- Attendance tracking
-- Leave management
+## Payroll
+- Salary management
+- Deductions
