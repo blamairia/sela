@@ -1,5 +1,5 @@
-# Tax Reports
+# Reports
 
-- Tax collected
-- Tax paid
-- Net liability
+- Sales reports
+- Purchase reports
+- Profit/Loss
