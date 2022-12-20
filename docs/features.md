@@ -1,5 +1,5 @@
 # Features
 
-## Notifications
-- SMS notifications
-- Twilio support
+## Barcodes
+- Barcode printing
+- Scanner support
