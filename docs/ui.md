@@ -1,4 +1,5 @@
-# UI Redesign
+# UI
 
-- New color scheme
-- Modern components
+## Dark Mode
+- System preference detection
+- Manual toggle
