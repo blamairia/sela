@@ -1,5 +1,5 @@
-# Receipts
+# POS
 
-## Thermal Printing
-- ESC/POS support
-- Custom templates
+## Cash Register
+- Opening/closing
+- Cash tracking
