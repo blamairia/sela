@@ -1,4 +1,5 @@
-# Session Security
+# Security
 
-- Token timeout
-- IP validation
+## 2FA
+- Email OTP
+- App authenticator
