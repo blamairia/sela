@@ -1,4 +1,4 @@
 # Changelog
 
-## v4.5.0
-- New dashboard design
+## v4.8.0
+- Performance optimizations
