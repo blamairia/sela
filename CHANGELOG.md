@@ -1,4 +1,4 @@
 # Changelog
 
-## v4.8.0
-- Performance optimizations
+## v5.0.0-rc1
+- UI polish
