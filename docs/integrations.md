@@ -1,4 +1,5 @@
 # Integrations
 
-## QuickBooks OAuth
-- Token management
+## QuickBooks
+- Sync customers
+- Sync invoices
