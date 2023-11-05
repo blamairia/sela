@@ -1,5 +1,5 @@
 # Backup
 
-## Dropbox
-- Token auth
-- Folder sync
+## Cloud Storage
+- AWS S3
+- MinIO
