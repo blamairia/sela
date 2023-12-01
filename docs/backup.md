@@ -1,5 +1,5 @@
 # Backup
 
-## Cloud Storage
-- AWS S3
-- MinIO
+## Google Drive
+- OAuth flow
+- Auto-upload
