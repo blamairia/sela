@@ -1,5 +1,5 @@
 # Backup
 
-## Google Drive
-- OAuth flow
-- Auto-upload
+## Dropbox
+- Token auth
+- Folder sync
