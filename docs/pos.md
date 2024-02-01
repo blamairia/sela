@@ -1,5 +1,5 @@
 # POS
 
-## Cash Register
-- Opening/closing
-- Cash tracking
+## Customer Display
+- Live cart view
+- Branding options
