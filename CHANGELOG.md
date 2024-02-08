@@ -1,4 +1,4 @@
 # Changelog
 
-## v5.1.0-beta
-- Transfer approvals
+## v5.1.0-rc1
+- Bug fixes
