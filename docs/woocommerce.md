@@ -1,4 +1,4 @@
-# Sync Logs
+# WooCommerce
 
-- Error tracking
-- Success history
+- Product sync
+- Stock sync
