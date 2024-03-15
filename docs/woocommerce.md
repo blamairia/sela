@@ -1,4 +1,4 @@
-# WooCommerce
+# WooCommerce API
 
-- Product sync
-- Stock sync
+- Consumer key/secret
+- Webhook support
