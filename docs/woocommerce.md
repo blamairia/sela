@@ -1,4 +1,4 @@
-# Stock Sync
+# Categories
 
-- Real-time updates
-- Batch sync
+- Auto-mapping
+- Manual mapping
