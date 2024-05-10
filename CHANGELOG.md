@@ -1,4 +1,4 @@
 # Changelog
 
-## v5.2.0-alpha
-- WooCommerce product sync
+## v5.2.0-beta
+- Scheduled sync
