@@ -1,4 +1,4 @@
-# Categories
+# Sync Logs
 
-- Auto-mapping
-- Manual mapping
+- Error tracking
+- Success history
