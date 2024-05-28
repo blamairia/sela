@@ -1,4 +1,5 @@
 # Performance
 
-- Lazy loading
-- Query optimization
+## WooCommerce
+- Batch processing
+- Queue system
