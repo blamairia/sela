@@ -1,4 +1,4 @@
 # Changelog
 
-## v5.2.0-beta
-- Scheduled sync
+## v5.2.0-rc1
+- Bug fixes
