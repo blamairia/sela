@@ -1,5 +1,5 @@
 # Security
 
-## 2FA
-- Email OTP
-- App authenticator
+## Device Management
+- Active sessions
+- Remote logout
