@@ -1,5 +1,4 @@
-# Security
+# Session Security
 
-## Device Management
-- Active sessions
-- Remote logout
+- Token timeout
+- IP validation
