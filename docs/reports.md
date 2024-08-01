@@ -1,5 +1,5 @@
 # Reports
 
-- Sales reports
-- Purchase reports
-- Profit/Loss
+## Dead Stock
+- Non-moving items
+- Age analysis
