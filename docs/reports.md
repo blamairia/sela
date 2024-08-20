@@ -1,5 +1,4 @@
-# Reports
+# Stock Aging
 
-## Dead Stock
-- Non-moving items
-- Age analysis
+- Age brackets
+- Value analysis
