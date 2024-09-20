@@ -1,4 +1,5 @@
-# Stock Aging
+# Tax Reports
 
-- Age brackets
-- Value analysis
+- Tax collected
+- Tax paid
+- Net liability
