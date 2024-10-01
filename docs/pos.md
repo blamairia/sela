@@ -1,5 +1,5 @@
-# POS
+# Receipts
 
-## Customer Display
-- Live cart view
-- Branding options
+## Thermal Printing
+- ESC/POS support
+- Custom templates
