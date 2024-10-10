@@ -1,4 +1,4 @@
 # Changelog
 
-## v5.3.0-alpha
-- Discount reports
+## v5.3.0-beta
+- Receipt customization
