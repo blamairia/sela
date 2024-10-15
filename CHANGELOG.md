@@ -1,4 +1,4 @@
 # Changelog
 
-## v5.3.0-beta
-- Receipt customization
+## v5.3.0-rc1
+- Security fixes
