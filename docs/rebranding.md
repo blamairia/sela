@@ -1,5 +1,5 @@
-# Translations
+# Rebranding
 
-- Spanish updated
-- Korean updated
-- All languages reviewed
+## Stocky -> Sela
+- New name
+- New identity
