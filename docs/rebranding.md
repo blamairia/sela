@@ -1,5 +1,5 @@
-# Rebranding
+# UI Updates
 
-## Stocky -> Sela
-- New name
-- New identity
+- Page titles
+- Headers
+- Footers
