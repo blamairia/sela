@@ -1,5 +1,5 @@
-# UI Updates
+# Vue Updates
 
-- Page titles
-- Headers
-- Footers
+- Footer.vue
+- Sidebar.vue
+- App.vue
