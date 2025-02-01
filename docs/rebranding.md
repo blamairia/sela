@@ -1,5 +1,5 @@
-# Vue Updates
+# Blade Updates
 
-- Footer.vue
-- Sidebar.vue
-- App.vue
+- Auth pages
+- Setup wizard
+- Store pages
