@@ -1,5 +1,5 @@
-# Blade Updates
+# Translations
 
-- Auth pages
-- Setup wizard
-- Store pages
+- Spanish updated
+- Korean updated
+- All languages reviewed
