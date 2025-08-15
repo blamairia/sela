@@ -1,4 +1,4 @@
 # Changelog
 
-## v5.4.0-beta
-- DB updates
+## v5.4.0-rc1
+- Bug fixes
