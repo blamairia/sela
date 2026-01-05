@@ -124,52 +124,69 @@ class PosController extends BaseController
                 $total_points_earned = 0;
 
                 foreach ($data as $key => $value) {
-                    $product = Product::find($value['product_id']);
+                    // Check if this is an ad-hoc item (not in product catalog)
+                    $isAdhoc = isset($value['is_adhoc']) && $value['is_adhoc'];
                     $isService = isset($value['product_type']) && $value['product_type'] === 'is_service';
-
-                    // Resolve sale unit:
-                    //  - Prefer explicit sale_unit_id from payload
-                    //  - Fallback to product.unit_sale_id (unitSale relation) for backward compatibility
+                    
+                    $product = null;
                     $unit = null;
-                    if (! $isService) {
-                        if (isset($value['sale_unit_id']) && $value['sale_unit_id'] !== null && $value['sale_unit_id'] !== '') {
-                            $unit = Unit::where('id', $value['sale_unit_id'])->first();
-                        }
-
-                        if (! $unit) {
-                            $productWithUnit = Product::with('unitSale')
-                                ->where('id', $value['product_id'])
-                                ->first();
-                            if ($productWithUnit && $productWithUnit->unitSale) {
-                                $unit = $productWithUnit->unitSale;
-                                $value['sale_unit_id'] = $unit->id;
+                    
+                    if (!$isAdhoc) {
+                        // Regular product - find from database
+                        $product = Product::find($value['product_id']);
+                        
+                        // Resolve sale unit for non-service items
+                        if (!$isService) {
+                            if (isset($value['sale_unit_id']) && $value['sale_unit_id'] !== null && $value['sale_unit_id'] !== '') {
+                                $unit = Unit::where('id', $value['sale_unit_id'])->first();
                             }
+
+                            if (!$unit) {
+                                $productWithUnit = Product::with('unitSale')
+                                    ->where('id', $value['product_id'])
+                                    ->first();
+                                if ($productWithUnit && $productWithUnit->unitSale) {
+                                    $unit = $productWithUnit->unitSale;
+                                    $value['sale_unit_id'] = $unit->id;
+                                }
+                            }
+                        }
+                        
+                        // Earn points only for regular products
+                        if ($product) {
+                            $total_points_earned += $value['quantity'] * $product->points;
                         }
                     }
 
-                    $total_points_earned += $value['quantity'] * $product->points;
-
-                    $orderDetails[] = [
+                    // Build order detail record
+                    $orderDetail = [
                         'date' => Carbon::now(),
                         'sale_id' => $order->id,
-                        'sale_unit_id' => $value['sale_unit_id'],
+                        'sale_unit_id' => $isAdhoc ? null : $value['sale_unit_id'],
                         'quantity' => $value['quantity'],
-                        'product_id' => $value['product_id'],
-                        'product_variant_id' => $value['product_variant_id'],
+                        'product_id' => $isAdhoc ? null : $value['product_id'],
+                        'product_variant_id' => $isAdhoc ? null : $value['product_variant_id'],
                         'total' => $value['subtotal'],
                         'price' => $value['Unit_price'],
                         'TaxNet' => $value['tax_percent'],
                         'tax_method' => $value['tax_method'],
                         'discount' => $value['discount'],
                         'discount_method' => $value['discount_Method'],
-                        'imei_number' => $value['imei_number'],
+                        'imei_number' => $value['imei_number'] ?? null,
                         'price_type' => isset($value['price_type']) ? $value['price_type'] : 'retail',
+                        // Ad-hoc item fields
+                        'is_adhoc' => $isAdhoc ? 1 : 0,
+                        'adhoc_name' => $isAdhoc ? ($value['adhoc_name'] ?? 'Quick Item') : null,
+                        'adhoc_cost' => $isAdhoc ? ($value['adhoc_cost'] ?? 0) : null,
+                        'adhoc_price' => $isAdhoc ? ($value['adhoc_price'] ?? $value['Unit_price']) : null,
                     ];
+                    
+                    $orderDetails[] = $orderDetail;
 
-                    // Stock deduction only applies to non-service items.
+                    // Stock deduction only applies to non-service, non-adhoc items.
                     // If unit or product_warehouse cannot be resolved, we skip stock adjustment
                     // but still create the sale; this prevents hard failures for legacy/offline data.
-                    if (! $isService && $unit) {
+                    if (!$isAdhoc && !$isService && $unit) {
                         if ($value['product_variant_id'] !== null) {
                             $product_warehouse = product_warehouse::where('warehouse_id', $order->warehouse_id)
                                 ->where('product_id', $value['product_id'])
@@ -786,21 +803,26 @@ class PosController extends BaseController
                 $data = $request['details'];
                 $orderDetails = [];
                 foreach ($data as $key => $value) {
+                    $isAdhoc = isset($value['is_adhoc']) && $value['is_adhoc'];
                     $orderDetails[] = [
                         'date' => Carbon::now(),
                         'draft_sale_id' => $order->id,
-                        'sale_unit_id' => $value['sale_unit_id'],
+                        'sale_unit_id' => $isAdhoc ? null : $value['sale_unit_id'],
                         'quantity' => $value['quantity'],
-                        'product_id' => $value['product_id'],
-                        'product_variant_id' => $value['product_variant_id'],
+                        'product_id' => $isAdhoc ? null : $value['product_id'],
+                        'product_variant_id' => $isAdhoc ? null : $value['product_variant_id'],
                         'total' => $value['subtotal'],
                         'price' => $value['Unit_price'],
                         'TaxNet' => $value['tax_percent'],
                         'tax_method' => $value['tax_method'],
                         'discount' => $value['discount'],
                         'discount_method' => $value['discount_Method'],
-                        'imei_number' => $value['imei_number'],
+                        'imei_number' => $value['imei_number'] ?? null,
                         'price_type' => isset($value['price_type']) ? $value['price_type'] : 'retail',
+                        'is_adhoc' => $isAdhoc ? 1 : 0,
+                        'adhoc_name' => $isAdhoc ? ($value['adhoc_name'] ?? 'Quick Item') : null,
+                        'adhoc_cost' => $isAdhoc ? ($value['adhoc_cost'] ?? 0) : null,
+                        'adhoc_price' => $isAdhoc ? ($value['adhoc_price'] ?? $value['Unit_price']) : null,
                     ];
                 }
                 if (! empty($orderDetails)) {
@@ -825,21 +847,26 @@ class PosController extends BaseController
                 $data = $request['details'];
                 $orderDetails = [];
                 foreach ($data as $key => $value) {
+                    $isAdhoc = isset($value['is_adhoc']) && $value['is_adhoc'];
                     $orderDetails[] = [
                         'date' => Carbon::now(),
                         'draft_sale_id' => $order->id,
-                        'sale_unit_id' => $value['sale_unit_id'],
+                        'sale_unit_id' => $isAdhoc ? null : $value['sale_unit_id'],
                         'quantity' => $value['quantity'],
-                        'product_id' => $value['product_id'],
-                        'product_variant_id' => $value['product_variant_id'],
+                        'product_id' => $isAdhoc ? null : $value['product_id'],
+                        'product_variant_id' => $isAdhoc ? null : $value['product_variant_id'],
                         'total' => $value['subtotal'],
                         'price' => $value['Unit_price'],
                         'TaxNet' => $value['tax_percent'],
                         'tax_method' => $value['tax_method'],
                         'discount' => $value['discount'],
                         'discount_method' => $value['discount_Method'],
-                        'imei_number' => $value['imei_number'],
+                        'imei_number' => $value['imei_number'] ?? null,
                         'price_type' => isset($value['price_type']) ? $value['price_type'] : 'retail',
+                        'is_adhoc' => $isAdhoc ? 1 : 0,
+                        'adhoc_name' => $isAdhoc ? ($value['adhoc_name'] ?? 'Quick Item') : null,
+                        'adhoc_cost' => $isAdhoc ? ($value['adhoc_cost'] ?? 0) : null,
+                        'adhoc_price' => $isAdhoc ? ($value['adhoc_price'] ?? $value['Unit_price']) : null,
                     ];
                 }
                 if (! empty($orderDetails)) {

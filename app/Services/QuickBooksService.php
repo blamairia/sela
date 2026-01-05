@@ -299,6 +299,32 @@ class QuickBooksService
         $sale->loadMissing(['saleDetails.product']);
         $lines = [];
         foreach ($sale->saleDetails as $d) {
+            // Handle ad-hoc items (no product reference)
+            if ($d->is_adhoc || empty($d->product_id)) {
+                // Create a generic service line for ad-hoc items
+                $itemName = $d->adhoc_name ?? 'Quick Sale Item';
+                
+                // Try to find or create a generic "Ad-hoc Sales" item in QBO
+                $genericItemId = $this->ensureAdhocItemId($ds);
+                if (!($genericItemId['ok'] ?? false)) {
+                    // Fallback: skip this line but log warning
+                    Log::warning('QBO: Could not create ad-hoc item, skipping line', ['detail_id' => $d->id]);
+                    continue;
+                }
+                
+                $lines[] = [
+                    'Amount' => (float) $d->total,
+                    'DetailType' => 'SalesItemLineDetail',
+                    'Description' => $itemName,
+                    'SalesItemLineDetail' => [
+                        'ItemRef' => ['value' => (string) $genericItemId['id']],
+                        'Qty' => (float) $d->quantity,
+                        'UnitPrice' => (float) $d->price,
+                    ],
+                ];
+                continue;
+            }
+            
             $p = $d->product;
             if (! $p) {
                 return ['ok' => false, 'error' => "Missing product id {$d->product_id} on detail {$d->id}"];
@@ -321,6 +347,43 @@ class QuickBooksService
         }
 
         return ['ok' => true, 'lines' => $lines];
+    }
+    
+    /**
+     * Ensure a generic "Ad-hoc Sales" item exists in QuickBooks for ad-hoc POS items.
+     */
+    private function ensureAdhocItemId(DataService $ds): array
+    {
+        $itemName = 'Ad-hoc Sales';
+        $nameEsc = $this->qboEscape($itemName);
+        
+        // Check if it already exists
+        $hit = $ds->Query("select Id from Item where Name = '$nameEsc' order by Id");
+        if (is_array($hit) && isset($hit[0]->Id)) {
+            return ['ok' => true, 'id' => (string) $hit[0]->Id];
+        }
+        
+        // Create it
+        $acct = $this->ensureIncomeAccountId($ds);
+        if (!($acct['ok'] ?? false)) {
+            return $acct;
+        }
+        
+        $payload = [
+            'Name' => $itemName,
+            'Type' => 'Service',
+            'Active' => true,
+            'Description' => 'Quick/Ad-hoc sales items from POS',
+            'IncomeAccountRef' => ['value' => (string) $acct['id']],
+        ];
+        
+        $res = $ds->Add(Item::create($payload));
+        if ($e = $this->dsError($ds)) {
+            return ['ok' => false, 'error' => 'QBO Create Ad-hoc Item failed'] + $e;
+        }
+        
+        Log::info('QBO Ad-hoc Sales item created', ['id' => $res->Id ?? null]);
+        return ['ok' => true, 'id' => (string) ($res->Id ?? '')];
     }
 
     private function getInvoiceMetaById(DataService $ds, string $id)

@@ -184,6 +184,23 @@ trait CalculatesCogsAndAverageCost
             }
         }
 
+        // ---- Ad-Hoc COGS (cost stored directly on sale_details) ----
+        $adhocCogs = SaleDetail::join('sales as s', 's.id', '=', 'sale_details.sale_id')
+            ->where('s.statut', 'completed')
+            ->when($warehouseId, fn ($q) => $q->where('s.warehouse_id', $warehouseId),
+                fn ($q) => $q->whereIn('s.warehouse_id', $warehouseIds))
+            ->where(function ($query) use ($view_records) {
+                if (! $view_records) {
+                    return $query->where('s.user_id', '=', Auth::user()->id);
+                }
+            })
+            ->whereBetween('sale_details.date', [$start, $end])
+            ->where('sale_details.is_adhoc', 1)
+            ->sum(DB::raw('sale_details.quantity * COALESCE(sale_details.adhoc_cost, 0)'));
+
+        $totalFifo += $adhocCogs;
+        $totalAvg  += $adhocCogs;
+
         return ['fifo' => $totalFifo, 'avg' => $totalAvg];
     }
 

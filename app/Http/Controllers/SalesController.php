@@ -229,28 +229,37 @@ class SalesController extends BaseController
             $total_points_earned = 0;
             foreach ($data as $key => $value) {
 
-                $product = Product::find($value['product_id']);
-                $unit = Unit::where('id', $value['sale_unit_id'])->first();
-                $total_points_earned += $value['quantity'] * $product->points;
+                $is_adhoc = isset($value['is_adhoc']) && $value['is_adhoc'];
+                $product = $is_adhoc ? null : Product::find($value['product_id']);
+
+                if ($product) {
+                    $total_points_earned += $value['quantity'] * $product->points;
+                }
 
                 $orderDetails[] = [
                     'date' => $request->date,
                     'sale_id' => $order->id,
-                    'sale_unit_id' => $value['sale_unit_id'] ? $value['sale_unit_id'] : null,
+                    'sale_unit_id' => ($is_adhoc || !$value['sale_unit_id']) ? null : $value['sale_unit_id'],
                     'quantity' => $value['quantity'],
                     'price' => $value['Unit_price'],
                     'TaxNet' => $value['tax_percent'],
                     'tax_method' => $value['tax_method'],
                     'discount' => $value['discount'],
                     'discount_method' => $value['discount_Method'],
-                    'product_id' => $value['product_id'],
-                    'product_variant_id' => $value['product_variant_id'] ? $value['product_variant_id'] : null,
+                    'product_id' => $is_adhoc ? null : $value['product_id'],
+                    'product_variant_id' => ($is_adhoc || !$value['product_variant_id']) ? null : $value['product_variant_id'],
                     'total' => $value['subtotal'],
                     'imei_number' => $value['imei_number'],
                     'price_type' => isset($value['price_type']) ? $value['price_type'] : 'retail',
+                    'is_adhoc' => $is_adhoc ? 1 : 0,
+                    'adhoc_name' => $is_adhoc ? ($value['adhoc_name'] ?? 'Ad-hoc Item') : null,
+                    'adhoc_cost' => $is_adhoc ? ($value['adhoc_cost'] ?? 0) : null,
+                    'adhoc_price' => $is_adhoc ? ($value['adhoc_price'] ?? $value['Unit_price']) : null,
                 ];
 
-                if ($order->statut == 'completed') {
+                if ($order->statut == 'completed' && $product) {
+                    $unit = $value['sale_unit_id'] ? Unit::where('id', $value['sale_unit_id'])->first() : null;
+                    
                     if ($value['product_variant_id'] !== null) {
                         $product_warehouse = product_warehouse::where('deleted_at', '=', null)
                             ->where('warehouse_id', $order->warehouse_id)
@@ -533,16 +542,20 @@ class SalesController extends BaseController
                 // Update Data with New request
                 $total_points_earned = 0;
                 foreach ($new_sale_details as $prd => $prod_detail) {
+                    
+                    $is_adhoc = isset($prod_detail['is_adhoc']) && $prod_detail['is_adhoc'];
+                    $product = $is_adhoc ? null : Product::find($prod_detail['product_id']);
+                    
+                    if ($product) {
+                        $total_points_earned += $prod_detail['quantity'] * $product->points;
+                    }
 
-                    $product = Product::find($prod_detail['product_id']);
-                    $total_points_earned += $prod_detail['quantity'] * $product->points;
+                    $get_type_product = $product ? $product->type : 'is_adhoc';
 
-                    $get_type_product = Product::where('id', $prod_detail['product_id'])->first()->type;
+                    if ($prod_detail['sale_unit_id'] !== null || $get_type_product == 'is_service' || $is_adhoc) {
+                        $unit_prod = ($prod_detail['sale_unit_id']) ? Unit::where('id', $prod_detail['sale_unit_id'])->first() : null;
 
-                    if ($prod_detail['sale_unit_id'] !== null || $get_type_product == 'is_service') {
-                        $unit_prod = Unit::where('id', $prod_detail['sale_unit_id'])->first();
-
-                        if ($request['statut'] == 'completed') {
+                        if ($request['statut'] == 'completed' && $product && !$is_adhoc) {
 
                             if ($prod_detail['product_variant_id'] !== null) {
                                 $product_warehouse = product_warehouse::where('deleted_at', '=', null)
@@ -587,10 +600,14 @@ class SalesController extends BaseController
                         $orderDetails['discount'] = $prod_detail['discount'];
                         $orderDetails['discount_method'] = $prod_detail['discount_Method'];
                         $orderDetails['quantity'] = $prod_detail['quantity'];
-                        $orderDetails['product_id'] = $prod_detail['product_id'];
-                        $orderDetails['product_variant_id'] = $prod_detail['product_variant_id'];
+                        $orderDetails['product_id'] = $is_adhoc ? null : $prod_detail['product_id'];
+                        $orderDetails['product_variant_id'] = ($is_adhoc) ? null : $prod_detail['product_variant_id'];
                         $orderDetails['total'] = $prod_detail['subtotal'];
                         $orderDetails['imei_number'] = $prod_detail['imei_number'];
+                        $orderDetails['is_adhoc'] = $is_adhoc ? 1 : 0;
+                        $orderDetails['adhoc_name'] = $is_adhoc ? ($prod_detail['adhoc_name'] ?? 'Ad-hoc Item') : null;
+                        $orderDetails['adhoc_cost'] = $is_adhoc ? ($prod_detail['adhoc_cost'] ?? 0) : null;
+                        $orderDetails['adhoc_price'] = $is_adhoc ? ($prod_detail['adhoc_price'] ?? $prod_detail['Unit_price']) : null;
 
                         if (! in_array($prod_detail['id'], $old_products_id)) {
                             $orderDetails['date'] = $request['date'];
@@ -1398,27 +1415,34 @@ class SalesController extends BaseController
             if ($detail->sale_unit_id !== null) {
                 $unit = Unit::where('id', $detail->sale_unit_id)->first();
             } else {
-                $product_unit_sale_id = Product::with('unitSale')
-                    ->where('id', $detail->product_id)
-                    ->first();
-
-                if ($product_unit_sale_id['unitSale']) {
-                    $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
+                if ($detail->product_id) {
+                    $product_unit_sale_id = Product::with('unitSale')
+                        ->where('id', $detail->product_id)
+                        ->first();
+                    if ($product_unit_sale_id && $product_unit_sale_id['unitSale']) {
+                        $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
+                    } else {
+                        $unit = null;
+                    }
+                } else {
+                    $unit = null;
                 }
-                $unit = null;
-
             }
 
             if ($detail->product_variant_id) {
-
                 $productsVariants = ProductVariant::where('product_id', $detail->product_id)
                     ->where('id', $detail->product_variant_id)->first();
-
                 $data['code'] = $productsVariants->code;
-                $data['name'] = '['.$productsVariants->name.']'.$detail['product']['name'];
+                $data['name'] = '['.$productsVariants->name.']'.($detail['product'] ? $detail['product']['name'] : $detail->adhoc_name);
             } else {
-                $data['code'] = $detail['product']['code'];
-                $data['name'] = $detail['product']['name'];
+                if ($detail->product_id) {
+                    $data['code'] = $detail['product']['code'];
+                    $data['name'] = $detail['product']['name'];
+                } else {
+                    // Ad-hoc item
+                    $data['code'] = 'ADHOC';
+                    $data['name'] = $detail->adhoc_name ?? 'Ad-hoc Item';
+                }
             }
 
             $data['detail_id'] = $detail_id += 1;

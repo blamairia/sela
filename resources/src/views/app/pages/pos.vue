@@ -97,6 +97,16 @@
           <i class="i-Add-User"></i>
         </button>
         
+        <!-- Quick Item (Ad-hoc) Button -->
+        <button 
+          class="action-btn-icon btn-quick-item" 
+          @click="openQuickItemModal" 
+          :title="$t('Quick_Item')"
+          style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;"
+        >
+          <i class="i-Add"></i>
+        </button>
+        
         <!-- Today's Sales -->
         <button class="action-btn-icon" :title="$t('Today_Sales')" @click="get_today_sales" v-if="isOnline">
           <i class="i-Receipt"></i>
@@ -571,6 +581,136 @@
     />
     <div class="text-center mt-2">
       <b-button variant="primary" @click="$bvModal.hide('open_scan')">{{ $t('Close') }}</b-button>
+    </div>
+  </b-modal>
+
+  <!-- Quick Item (Ad-hoc) Modal - Optimized for Speed -->
+  <b-modal 
+    id="QuickItemModal" 
+    hide-footer 
+    :title="$t('Quick_Item')" 
+    size="md"
+    @shown="onQuickItemModalShown"
+    @hidden="onQuickItemModalHidden"
+  >
+    <div class="quick-item-form">
+      <!-- Keyboard Hints -->
+      <div class="alert alert-light py-2 px-3 mb-3" style="font-size: 0.85rem; background: #f8f9fa;">
+        <strong>⌨️</strong> 
+        <kbd>Enter</kbd> {{ $t('to add') }} · 
+        <kbd>+</kbd><kbd>-</kbd> {{ $t('quantity') }}
+      </div>
+      
+      <!-- Price First - Most important field -->
+      <div class="form-group">
+        <label for="quick-item-price" class="font-weight-bold">
+          {{ $t('Price') }} <span class="text-danger">*</span>
+        </label>
+        <div class="input-group input-group-lg">
+          <div class="input-group-prepend">
+            <span class="input-group-text">{{ currentUser.currency }}</span>
+          </div>
+          <input 
+            type="number" 
+            id="quick-item-price"
+            class="form-control form-control-lg" 
+            v-model.number="quickItem.price" 
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+            style="font-size: 1.5rem; font-weight: 600;"
+            @keydown.enter.prevent="onQuickItemEnter"
+          />
+        </div>
+      </div>
+      
+      <!-- Quantity with visual +/- buttons -->
+      <div class="form-group">
+        <label>{{ $t('Quantity') }}</label>
+        <div class="d-flex align-items-center">
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary btn-lg px-3"
+            @click="quickItem.quantity = Math.max(1, quickItem.quantity - 1)"
+          >−</button>
+          <input 
+            type="number" 
+            class="form-control form-control-lg text-center mx-2" 
+            v-model.number="quickItem.quantity" 
+            min="1"
+            style="width: 80px; font-size: 1.25rem; font-weight: 600;"
+          />
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary btn-lg px-3"
+            @click="quickItem.quantity++"
+          >+</button>
+        </div>
+      </div>
+      
+      <!-- Item Name - Pre-filled (collapsed by default) -->
+      <div class="form-group">
+        <label for="quick-item-name" class="text-muted">{{ $t('Item_Name') }}</label>
+        <input 
+          type="text" 
+          id="quick-item-name"
+          class="form-control form-control-sm" 
+          v-model="quickItem.name" 
+          placeholder="Other"
+        />
+      </div>
+      
+      <!-- Cost (optional, small) -->
+      <div class="form-group">
+        <label for="quick-item-cost" class="text-muted">{{ $t('Cost') }} <small>({{ $t('optional') }})</small></label>
+        <input 
+          type="number" 
+          id="quick-item-cost"
+          class="form-control form-control-sm" 
+          v-model.number="quickItem.cost" 
+          placeholder="0"
+          min="0"
+          step="0.01"
+        />
+      </div>
+      
+      <!-- Live Summary -->
+      <div class="quick-item-summary p-3 rounded mb-3" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);" v-if="quickItem.price > 0">
+        <div class="d-flex justify-content-between align-items-center">
+          <span>
+            <strong>{{ quickItem.name }}</strong> × {{ quickItem.quantity }}
+          </span>
+          <strong class="h4 mb-0" style="color: #667eea;">{{ formatPriceWithCurrentCurrency(quickItem.price * quickItem.quantity, 2) }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-1" v-if="quickItem.cost > 0">
+          <small class="text-muted">{{ $t('Profit') }}</small>
+          <small class="text-success">+{{ formatPriceWithCurrentCurrency((quickItem.price - quickItem.cost) * quickItem.quantity, 2) }}</small>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="d-flex justify-content-between">
+        <b-button variant="outline-secondary" @click="$bvModal.hide('QuickItemModal')">
+          {{ $t('Close') }}
+        </b-button>
+        <div>
+          <b-button 
+            variant="outline-primary" 
+            @click="addQuickItem(true)" 
+            :disabled="!quickItem.price || quickItem.price <= 0"
+            class="mr-2"
+          >
+            {{ $t('Add_More') }}
+          </b-button>
+          <b-button 
+            variant="primary" 
+            @click="addQuickItem(false)" 
+            :disabled="!quickItem.price || quickItem.price <= 0"
+          >
+            {{ $t('Add_Close') }} ↵
+          </b-button>
+        </div>
+      </div>
     </div>
   </b-modal>
 
@@ -1789,6 +1929,15 @@ export default {
   },
   data() {
     return {
+      // Quick Item (ad-hoc) modal properties
+      quickItemModal: false,
+      quickItemCounter: 0, // Auto-increment counter for "Other 1", "Other 2", etc.
+      quickItem: {
+        name: 'Other',
+        price: '',
+        cost: 0,
+        quantity: 1,
+      },
      
       sendEmail: false,
       sendSMS: false,
@@ -2344,8 +2493,193 @@ export default {
   mounted() {
     this.changeSidebarProperties();
     this.paginate_products(this.product_perPage, 0);
+    // Set up global keyboard shortcuts for Quick Item
+    this.setupQuickItemShortcuts();
+  },
+  beforeDestroy() {
+    // Clean up global keyboard listeners
+    this.cleanupQuickItemShortcuts();
   },
   methods: {
+    // ========== Quick Item (Ad-hoc) Methods ==========
+    
+    // Global keyboard handler for Quick Item shortcuts
+    handleQuickItemKeydown(e) {
+      // + key (or = key without shift, or numpad +)
+      const isPlusKey = e.key === '+' || (e.key === '=' && !e.shiftKey) || e.code === 'NumpadAdd';
+      const isMinusKey = e.key === '-' || e.code === 'NumpadSubtract';
+      
+      // If modal is NOT open, + opens it
+      if (isPlusKey && !this.quickItemModal) {
+        e.preventDefault();
+        this.openQuickItemModal();
+        return;
+      }
+      
+      // If modal IS open, handle +/- for quantity
+      if (this.quickItemModal) {
+        if (isPlusKey) {
+          e.preventDefault();
+          this.quickItem.quantity = Math.max(1, (this.quickItem.quantity || 1) + 1);
+          return;
+        }
+        if (isMinusKey) {
+          e.preventDefault();
+          this.quickItem.quantity = Math.max(1, (this.quickItem.quantity || 1) - 1);
+          return;
+        }
+      }
+    },
+    
+    // Called on mounted to set up global keyboard listener
+    setupQuickItemShortcuts() {
+      window.addEventListener('keydown', this.handleQuickItemKeydown);
+    },
+    
+    // Called on destroyed to clean up
+    cleanupQuickItemShortcuts() {
+      window.removeEventListener('keydown', this.handleQuickItemKeydown);
+    },
+    
+    openQuickItemModal() {
+      this.prepareNextQuickItem();
+      this.quickItemModal = true;
+      this.$bvModal.show('QuickItemModal');
+    },
+    
+    // Called when modal is shown - focus on price field for fastest entry
+    onQuickItemModalShown() {
+      this.$nextTick(() => {
+        const priceInput = document.getElementById('quick-item-price');
+        if (priceInput) {
+          priceInput.focus();
+          priceInput.select();
+        }
+      });
+    },
+    
+    // Called when modal is hidden
+    onQuickItemModalHidden() {
+      this.quickItemModal = false;
+      this.resetQuickItem();
+    },
+    
+    // Prepare next quick item with auto-incremented name
+    prepareNextQuickItem() {
+      this.quickItemCounter++;
+      // Use $set to ensure Vue reactivity triggers properly
+      this.$set(this, 'quickItem', {
+        name: this.quickItemCounter === 1 ? 'Other' : `Other ${this.quickItemCounter}`,
+        price: '',  // Empty string works better with v-model.number
+        cost: 0,
+        quantity: 1,
+      });
+    },
+    
+    // Reset quick item counter (called when cart is cleared)
+    resetQuickItemCounter() {
+      this.quickItemCounter = 0;
+    },
+    
+    resetQuickItem() {
+      this.$set(this, 'quickItem', {
+        name: 'Other',
+        price: '',
+        cost: 0,
+        quantity: 1,
+      });
+    },
+    
+    // Add quick item - keepOpen: true for Add More, false for Add & Close
+    addQuickItem(keepOpen = false) {
+      if (!this.quickItem.name || !this.quickItem.price || this.quickItem.price <= 0) {
+        this.makeToast("danger", this.$t('Please enter a price'), this.$t("Failed"));
+        // Re-focus on price field
+        this.$nextTick(() => {
+          const priceInput = document.getElementById('quick-item-price');
+          if (priceInput) priceInput.focus();
+        });
+        return;
+      }
+      
+      // Generate unique ID for this ad-hoc item
+      const uniqueId = 'adhoc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      
+      const subtotal = this.quickItem.price * this.quickItem.quantity;
+      
+      // Add ad-hoc item to cart
+      const adhocDetail = {
+        detail_id: uniqueId,
+        name: this.quickItem.name,
+        code: 'OTHER',
+        quantity: this.quickItem.quantity,
+        Unit_price: this.quickItem.price,
+        Total_price: this.quickItem.price,
+        subtotal: subtotal,
+        product_id: null,
+        product_variant_id: null,
+        sale_unit_id: null,
+        tax_percent: 0,
+        tax_method: '1',
+        discount: 0,
+        discount_Method: '2',
+        imei_number: null,
+        price_type: 'retail',
+        product_type: 'is_adhoc',
+        // Ad-hoc specific fields
+        is_adhoc: true,
+        adhoc_name: this.quickItem.name,
+        adhoc_cost: this.quickItem.cost || 0,
+        adhoc_price: this.quickItem.price,
+        // Ensure standard fields expected by CalculTotal are present
+        Net_price: this.quickItem.price,
+        taxe: 0,
+        tax_percent: 0,
+      };
+      
+      this.details.push(adhocDetail);
+      this.CalculTotal();
+      
+      // Show brief success feedback
+      this.makeToast(
+        "success",
+        `${this.quickItem.name}: ${this.formatPriceWithCurrentCurrency(this.quickItem.price, 2)} × ${this.quickItem.quantity}`,
+        this.$t("Success")
+      );
+      
+      if (keepOpen) {
+        // Prepare for next quick item entry
+        this.prepareNextQuickItem();
+        this.$nextTick(() => {
+          const priceInput = document.getElementById('quick-item-price');
+          if (priceInput) {
+            priceInput.focus();
+            priceInput.select();
+          }
+        });
+      } else {
+        // Close modal
+        this.$bvModal.hide('QuickItemModal');
+        this.quickItemModal = false;
+        // The onQuickItemModalHidden handler will reset the item
+      }
+    },
+    
+    // Handle Enter key in quick item form
+    // - If price is filled: Add item and reset for next entry
+    // - If price is empty: Close the modal
+    onQuickItemEnter() {
+      const price = parseFloat(this.quickItem.price);
+      if (!isNaN(price) && price > 0) {
+        // Price is valid - add and reset for next item
+        this.addQuickItem(true);
+      } else {
+        // Price is empty or zero - close modal
+        this.$bvModal.hide('QuickItemModal');
+        this.quickItemModal = false;
+      }
+    },
+    
     // Custom filter function for customer v-select to search by name and phone
     filterCustomerByPhone(option, label, search) {
       if (!search) return true;
@@ -2771,7 +3105,11 @@ export default {
         .catch(error => {
           NProgress.done();
           this.DraftProcessing = false;
-          this.makeToast("danger", this.$t("InvalidData"), this.$t("Failed"));
+          if (error.response && error.response.data && error.response.data.message) {
+             this.makeToast("danger", error.response.data.message, this.$t("Failed"));
+          } else {
+             this.makeToast("danger", this.$t("InvalidData"), this.$t("Failed"));
+          }
         });
     },
 
@@ -2903,7 +3241,11 @@ export default {
           .catch(error => {
             NProgress.done();
             this.paymentProcessing = false;
-            this.makeToast("danger", this.$t("InvalidData"), this.$t("Failed"));
+            if (error.response && error.response.data && error.response.data.message) {
+              this.makeToast("danger", error.response.data.message, this.$t("Failed"));
+            } else {
+              this.makeToast("danger", this.$t("InvalidData"), this.$t("Failed"));
+            }
           });
       }
     },
@@ -2990,7 +3332,11 @@ export default {
           .catch(error => {
             this.paymentProcessing = false;
             NProgress.done();
-            this.makeToast("danger", this.$t("InvalidData"), this.$t("Failed"));
+             if (error.response && error.response.data && error.response.data.message) {
+              this.makeToast("danger", error.response.data.message, this.$t("Failed"));
+            } else {
+              this.makeToast("danger", this.$t("InvalidData"), this.$t("Failed"));
+            }
           });
       }
     },
@@ -3056,9 +3402,13 @@ export default {
     CalculTotal() {
       this.total = 0;
       for (var i = 0; i < this.details.length; i++) {
-        var tax = this.details[i].taxe * this.details[i].quantity;
+        var quantity = this.details[i].quantity || 1;
+        var tax_unit = this.details[i].taxe || 0;
+        var net_price = this.details[i].Net_price !== undefined ? this.details[i].Net_price : (this.details[i].Unit_price || 0);
+
+        var tax = tax_unit * quantity;
         this.details[i].subtotal = parseFloat(
-          this.details[i].quantity * this.details[i].Net_price + tax
+          quantity * net_price + tax
         );
         this.total = parseFloat(this.total + this.details[i].subtotal);
       }
@@ -3519,7 +3869,7 @@ export default {
       }
       for (var i = 0; i < this.details.length; i++) {
         if (this.details[i].code === code) {
-          if (this.details[i].product_type !== 'is_service' && this.details[i].quantity + 1 > this.details[i].current) {
+          if (this.details[i].product_type !== 'is_service' && this.details[i].product_type !== 'is_adhoc' && this.details[i].quantity + 1 > this.details[i].current) {
             this.makeToast("warning", this.$t("LowStock"), this.$t("Warning"));
           } else {
             this.details[i].quantity++;
@@ -3538,7 +3888,7 @@ export default {
     increment(id) {
       for (var i = 0; i < this.details.length; i++) {
         if (this.details[i].detail_id == id) {
-          if (this.details[i].product_type !== 'is_service' && this.details[i].quantity + 1 > this.details[i].current) {
+          if (this.details[i].product_type !== 'is_service' && this.details[i].product_type !== 'is_adhoc' && this.details[i].quantity + 1 > this.details[i].current) {
             this.makeToast("warning", this.$t("LowStock"), this.$t("Warning"));
           } else {
             this.details[i].quantity++;
@@ -3589,11 +3939,17 @@ export default {
           } else if (qty < 0) {
             this.makeToast("warning", this.$t("MinimumQuantity"), this.$t("Warning"));
             this.details[i].quantity = 1;
-          } else if (this.details[i].product_type !== 'is_service' && qty > detail.current) {
-            this.makeToast("warning", this.$t("LowStock"), this.$t("Warning"));
-            this.details[i].quantity = detail.current;
           } else {
-            this.details[i].quantity = qty;
+            // Check stock ONLY if not service AND not ad-hoc
+            const isService = this.details[i].product_type === 'is_service';
+            const isAdhoc = this.details[i].product_type === 'is_adhoc' || this.details[i].is_adhoc === true;
+            
+            if (!isService && !isAdhoc && qty > detail.current) {
+               this.makeToast("warning", this.$t("LowStock"), this.$t("Warning"));
+               this.details[i].quantity = detail.current;
+            } else {
+               this.details[i].quantity = qty;
+            }
           }
         }
       }
@@ -3624,6 +3980,7 @@ export default {
           this.detail.detail_id = detail.detail_id;
           this.detail.sale_unit_id = detail.sale_unit_id;
           this.detail.product_type = detail.product_type;
+          this.detail.is_adhoc = detail.is_adhoc; // Ensure is_adhoc is preserved
           this.detail.Unit_price = detail.Unit_price;
           this.detail.price_type = detail.price_type || 'retail';
           this.detail.retail_unit_price = detail.retail_unit_price !== undefined ? detail.retail_unit_price : detail.Unit_price;
@@ -3681,8 +4038,8 @@ export default {
             return;
           }
 
-          // 3) Apply unit conversion now that price is valid (skip stock logic for services)
-          if (this.details[i].product_type !== 'is_service') {
+          // 3) Apply unit conversion now that price is valid (skip stock logic for services AND ad-hoc)
+          if (this.details[i].product_type !== 'is_service' && this.details[i].product_type !== 'is_adhoc') {
             for (var k = 0; k < this.units.length; k++) {
               if (this.units[k].id == this.detail.sale_unit_id) {
                 if (this.units[k].operator == "/") {
@@ -3695,6 +4052,7 @@ export default {
               }
             }
           }
+
 
           // 4) Persist values to the row
           this.details[i].Unit_price = proposedUnitPrice;
@@ -3803,6 +4161,7 @@ export default {
       this.details = [];
       this.product = {};
       this.draft_sale_id = '';
+      this.quickItemCounter = 0; // Reset quick item counter for fresh naming
       this.paymentLines = [
         {
           amount: 0,
@@ -5985,11 +6344,13 @@ export default {
       }
       this.trySyncOfflineSales();
     },
-    // Ensure all non-service items have sufficient stock before proceeding to payment
+    // Ensure all non-service, non-adhoc items have sufficient stock before proceeding to payment
     verifyAllItemsInStock() {
       for (let i = 0; i < this.details.length; i++) {
         const d = this.details[i];
-        if (d && d.product_type !== 'is_service') {
+        // Skip stock check for services AND ad-hoc items
+        const isAdhoc = d.product_type === 'is_adhoc' || d.is_adhoc === true;
+        if (d && d.product_type !== 'is_service' && !isAdhoc) {
           const available = Number(d.current || 0);
           const qty = Number(d.quantity || 0);
           if (isNaN(available) || isNaN(qty) || qty > available) {
