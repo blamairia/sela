@@ -1156,15 +1156,19 @@ class SalesController extends BaseController
             if ($detail->sale_unit_id !== null) {
                 $unit = Unit::where('id', $detail->sale_unit_id)->first();
             } else {
-                $product_unit_sale_id = Product::with('unitSale')
-                    ->where('id', $detail->product_id)
-                    ->first();
+                if ($detail->product_id) {
+                    $product_unit_sale_id = Product::with('unitSale')
+                        ->where('id', $detail->product_id)
+                        ->first();
 
-                if ($product_unit_sale_id['unitSale']) {
-                    $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
+                    if ($product_unit_sale_id && $product_unit_sale_id['unitSale']) {
+                        $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
+                    } else {
+                        $unit = null;
+                    }
+                } else {
+                    $unit = null;
                 }
-                $unit = null;
-
             }
 
             if ($detail->product_variant_id) {
@@ -1173,11 +1177,17 @@ class SalesController extends BaseController
                     ->where('id', $detail->product_variant_id)->first();
 
                 $data['code'] = $productsVariants->code;
-                $data['name'] = '['.$productsVariants->name.']'.$detail['product']['name'];
+                $data['name'] = '['.$productsVariants->name.']'.($detail['product'] ? $detail['product']['name'] : '');
 
             } else {
-                $data['code'] = $detail['product']['code'];
-                $data['name'] = $detail['product']['name'];
+                if ($detail->product_id && $detail['product']) {
+                    $data['code'] = $detail['product']['code'];
+                    $data['name'] = $detail['product']['name'];
+                } else {
+                    // Ad-hoc item
+                    $data['code'] = 'ADHOC';
+                    $data['name'] = $detail->adhoc_name ?? 'Ad-hoc Item';
+                }
             }
 
             $data['quantity'] = $detail->quantity;
@@ -1203,7 +1213,7 @@ class SalesController extends BaseController
                 $data['taxe'] = $detail->price - $data['Net_price'] - $data['DiscountNet'];
             }
 
-            $data['is_imei'] = $detail['product']['is_imei'];
+            $data['is_imei'] = ($detail['product'] && $detail['product']['is_imei']) ? $detail['product']['is_imei'] : 0;
             $data['imei_number'] = $detail->imei_number;
 
             $details[] = $data;
@@ -1538,14 +1548,19 @@ class SalesController extends BaseController
             if ($detail->sale_unit_id !== null) {
                 $unit = Unit::where('id', $detail->sale_unit_id)->first();
             } else {
-                $product_unit_sale_id = Product::with('unitSale')
-                    ->where('id', $detail->product_id)
-                    ->first();
+                if ($detail->product_id) {
+                    $product_unit_sale_id = Product::with('unitSale')
+                        ->where('id', $detail->product_id)
+                        ->first();
 
-                if ($product_unit_sale_id['unitSale']) {
-                    $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
+                    if ($product_unit_sale_id && $product_unit_sale_id['unitSale']) {
+                        $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
+                    } else {
+                        $unit = null;
+                    }
+                } else {
+                    $unit = null;
                 }
-                $unit = null;
             }
 
             if ($detail->product_variant_id) {
@@ -1553,10 +1568,16 @@ class SalesController extends BaseController
                     ->where('id', $detail->product_variant_id)->first();
 
                 $data['code'] = $productsVariants->code;
-                $data['name'] = '['.$productsVariants->name.']'.$detail['product']['name'];
+                $data['name'] = '['.$productsVariants->name.']'.($detail['product'] ? $detail['product']['name'] : '');
             } else {
-                $data['code'] = $detail['product']['code'];
-                $data['name'] = $detail['product']['name'];
+                if ($detail->product_id && $detail['product']) {
+                    $data['code'] = $detail['product']['code'];
+                    $data['name'] = $detail['product']['name'];
+                } else {
+                    // Ad-hoc item
+                    $data['code'] = 'ADHOC';
+                    $data['name'] = $detail->adhoc_name ?? 'Ad-hoc Item';
+                }
             }
 
             $data['detail_id'] = $detail_id += 1;
@@ -1583,7 +1604,7 @@ class SalesController extends BaseController
                 $data['taxe'] = number_format($detail->price - $data['Net_price'] - $data['DiscountNet'], 2, '.', '');
             }
 
-            $data['is_imei'] = $detail['product']['is_imei'];
+            $data['is_imei'] = ($detail['product'] && $detail['product']['is_imei']) ? $detail['product']['is_imei'] : 0;
             $data['imei_number'] = $detail->imei_number;
 
             $details[] = $data;
