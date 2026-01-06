@@ -4,10 +4,10 @@
     <nav class="pos-header" v-if="productsReady">
       <div class="header-left">
         <div class="brand">
-          <div class="brand-icon">
+          <router-link to="/app/dashboard" class="brand-icon">
             <img v-if="currentUser && currentUser.logo" :src="'/images/'+currentUser.logo" alt="logo" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" />
             <span v-else>{{ (currentUser && currentUser.company) ? (currentUser.company[0] || 'S') : 'S' }}</span>
-          </div>
+          </router-link>
          
         </div>
       </div>
@@ -203,10 +203,10 @@
       <!-- Row 1: Brand + Icons -->
       <div class="mobile-row mobile-top">
         <div class="brand">
-          <div class="brand-icon">
+          <router-link to="/app/dashboard" class="brand-icon">
             <img v-if="currentUser && currentUser.logo" :src="'/images/'+currentUser.logo" alt="logo" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" />
             <span v-else>{{ (currentUser && currentUser.company) ? (currentUser.company[0] || 'S') : 'S' }}</span>
-          </div>
+          </router-link>
         </div>
         <div class="top-icons">
           <router-link v-if="isOnline" class="action-btn-icon" to="/app/dashboard" :title="$t('pos.Home')">
@@ -2618,7 +2618,8 @@ export default {
         subtotal: subtotal,
         product_id: null,
         product_variant_id: null,
-        sale_unit_id: null,
+        product_variant_id: null,
+        sale_unit_id: 1, // Default to Unit ID 1 (Standard Unit)
         tax_percent: 0,
         tax_method: '1',
         discount: 0,
@@ -5760,7 +5761,7 @@ export default {
           this.categories = response.data.categories;
           this.brands = response.data.brands;
           this.payment_methods = response.data.payment_methods;
-          this.sale.warehouse_id = response.data.defaultWarehouse;
+          this.sale.warehouse_id = 1;
           this.selectedClientId = response.data.defaultClient;
           this.client_name = response.data.default_client_name;
           this.clientIsEligible = response.data.default_client_eligible === true || response.data.default_client_eligible === 1;

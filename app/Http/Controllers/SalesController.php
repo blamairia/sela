@@ -1261,34 +1261,42 @@ class SalesController extends BaseController
             if ($detail->sale_unit_id !== null) {
                 $unit = Unit::where('id', $detail->sale_unit_id)->first();
             } else {
-                $product_unit_sale_id = Product::with('unitSale')
-                    ->where('id', $detail->product_id)
-                    ->first();
-                if ($product_unit_sale_id['unitSale']) {
-                    $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
+                if ($detail->product_id) {
+                    $product_unit_sale_id = Product::with('unitSale')
+                        ->where('id', $detail->product_id)
+                        ->first();
+                    if ($product_unit_sale_id && $product_unit_sale_id['unitSale']) {
+                        $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
+                    } else {
+                        $unit = null;
+                    }
+                } else {
+                    $unit = null;
                 }
-                $unit = null;
-
             }
 
             if ($detail->product_variant_id) {
-
                 $productsVariants = ProductVariant::where('product_id', $detail->product_id)
                     ->where('id', $detail->product_variant_id)->first();
-
                 $data['code'] = $productsVariants->code;
                 $data['name'] = '['.$productsVariants->name.']'.$detail['product']['name'];
-
             } else {
-                $data['code'] = $detail['product']['code'];
-                $data['name'] = $detail['product']['name'];
+                if ($detail->product_id && $detail['product']) {
+                    $data['code'] = $detail['product']['code'];
+                    $data['name'] = $detail['product']['name'];
+                    $data['is_imei'] = $detail['product']['is_imei'];
+                } else {
+                    // Ad-hoc item fallback
+                    $data['code'] = 'ADHOC';
+                    $data['name'] = $detail->adhoc_name ?? $detail['product']['name'] ?? 'Ad-hoc Item';
+                    $data['is_imei'] = 0;
+                }
             }
 
             $data['quantity'] = number_format($detail->quantity, 2, '.', '');
             $data['total'] = number_format($detail->total, 2, '.', '');
             $data['unit_sale'] = $unit ? $unit->ShortName : '';
 
-            $data['is_imei'] = $detail['product']['is_imei'];
             $data['imei_number'] = $detail->imei_number;
 
             $details[] = $data;
@@ -1443,9 +1451,9 @@ class SalesController extends BaseController
                 $productsVariants = ProductVariant::where('product_id', $detail->product_id)
                     ->where('id', $detail->product_variant_id)->first();
                 $data['code'] = $productsVariants->code;
-                $data['name'] = '['.$productsVariants->name.']'.($detail['product'] ? $detail['product']['name'] : $detail->adhoc_name);
+                $data['name'] = '['.$productsVariants->name.']'.($detail['product'] ? $detail['product']['name'] : '');
             } else {
-                if ($detail->product_id) {
+                if ($detail->product_id && $detail['product']) {
                     $data['code'] = $detail['product']['code'];
                     $data['name'] = $detail['product']['name'];
                 } else {
@@ -1454,6 +1462,7 @@ class SalesController extends BaseController
                     $data['name'] = $detail->adhoc_name ?? 'Ad-hoc Item';
                 }
             }
+
 
             $data['detail_id'] = $detail_id += 1;
             $data['quantity'] = number_format($detail->quantity, 2, '.', '');
@@ -1746,14 +1755,16 @@ class SalesController extends BaseController
                     $unit = Unit::where('id', $detail->sale_unit_id)->first();
                     $data['no_unit'] = 1;
                 } else {
-                    $product_unit_sale_id = Product::with('unitSale')
-                        ->where('id', $detail->product_id)
-                        ->first();
-
-                    if ($product_unit_sale_id['unitSale']) {
-                        $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
-                    }
                     $unit = null;
+                    if ($detail->product_id) {
+                        $product_unit_sale_id = Product::with('unitSale')
+                            ->where('id', $detail->product_id)
+                            ->first();
+
+                        if ($product_unit_sale_id && $product_unit_sale_id['unitSale']) {
+                            $unit = Unit::where('id', $product_unit_sale_id['unitSale']->id)->first();
+                        }
+                    }
 
                     $data['no_unit'] = 0;
                 }
@@ -1771,7 +1782,7 @@ class SalesController extends BaseController
                     $item_product ? $data['del'] = 0 : $data['del'] = 1;
                     $data['product_variant_id'] = $detail->product_variant_id;
                     $data['code'] = $productsVariants->code;
-                    $data['name'] = '['.$productsVariants->name.']'.$detail['product']['name'];
+                    $data['name'] = '['.$productsVariants->name.']'.($detail['product'] ? $detail['product']['name'] : '');
 
                     if ($unit && $unit->operator == '/') {
                         $stock = $item_product ? $item_product->qte * $unit->operator_value : 0;
@@ -1782,28 +1793,37 @@ class SalesController extends BaseController
                     }
 
                 } else {
-                    $item_product = product_warehouse::where('product_id', $detail->product_id)
-                        ->where('deleted_at', '=', null)->where('warehouse_id', $Sale_data->warehouse_id)
-                        ->where('product_variant_id', '=', null)->first();
+                    if ($detail->product_id && $detail['product']) {
+                        $item_product = product_warehouse::where('product_id', $detail->product_id)
+                            ->where('deleted_at', '=', null)->where('warehouse_id', $Sale_data->warehouse_id)
+                            ->where('product_variant_id', '=', null)->first();
 
-                    $item_product ? $data['del'] = 0 : $data['del'] = 1;
-                    $data['product_variant_id'] = null;
-                    $data['code'] = $detail['product']['code'];
-                    $data['name'] = $detail['product']['name'];
+                        $item_product ? $data['del'] = 0 : $data['del'] = 1;
+                        $data['product_variant_id'] = null;
+                        $data['code'] = $detail['product']['code'];
+                        $data['name'] = $detail['product']['name'];
 
-                    if ($unit && $unit->operator == '/') {
-                        $stock = $item_product ? $item_product->qte * $unit->operator_value : 0;
-                    } elseif ($unit && $unit->operator == '*') {
-                        $stock = $item_product ? $item_product->qte / $unit->operator_value : 0;
+                        if ($unit && $unit->operator == '/') {
+                            $stock = $item_product ? $item_product->qte * $unit->operator_value : 0;
+                        } elseif ($unit && $unit->operator == '*') {
+                            $stock = $item_product ? $item_product->qte / $unit->operator_value : 0;
+                        } else {
+                            $stock = 0;
+                        }
                     } else {
-                        $stock = 0;
+                        // Ad-hoc item
+                        $data['del'] = 0; // Not deleted, technically always "available"
+                        $data['product_variant_id'] = null;
+                        $data['code'] = 'ADHOC';
+                        $data['name'] = $detail->adhoc_name ?? 'Ad-hoc Item';
+                        $stock = 999999; 
+                        $data['is_adhoc'] = true;
                     }
-
                 }
 
                 $data['id'] = $detail->id;
-                $data['stock'] = $detail['product']['type'] != 'is_service' ? $stock : '---';
-                $data['product_type'] = $detail['product']['type'];
+                $data['stock'] = ($detail['product'] && $detail['product']['type'] != 'is_service') ? $stock : ($data['is_adhoc'] ?? false ? $stock : '---');
+                $data['product_type'] = $detail['product'] ? $detail['product']['type'] : 'is_adhoc';
                 $data['detail_id'] = $detail_id += 1;
                 $data['product_id'] = $detail->product_id;
                 $data['total'] = $detail->total;
@@ -1812,7 +1832,7 @@ class SalesController extends BaseController
                 $data['etat'] = 'current';
                 $data['unitSale'] = $unit ? $unit->ShortName : '';
                 $data['sale_unit_id'] = $unit ? $unit->id : '';
-                $data['is_imei'] = $detail['product']['is_imei'];
+                $data['is_imei'] = ($detail['product'] && $detail['product']['is_imei']) ? $detail['product']['is_imei'] : 0;
                 $data['imei_number'] = $detail->imei_number;
 
                 if ($detail->discount_method == '2') {

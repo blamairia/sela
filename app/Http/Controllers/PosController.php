@@ -162,7 +162,7 @@ class PosController extends BaseController
                     $orderDetail = [
                         'date' => Carbon::now(),
                         'sale_id' => $order->id,
-                        'sale_unit_id' => $isAdhoc ? null : $value['sale_unit_id'],
+                        'sale_unit_id' => $isAdhoc ? ($value['sale_unit_id'] ?? 1) : $value['sale_unit_id'],
                         'quantity' => $value['quantity'],
                         'product_id' => $isAdhoc ? null : $value['product_id'],
                         'product_variant_id' => $isAdhoc ? null : $value['product_variant_id'],
