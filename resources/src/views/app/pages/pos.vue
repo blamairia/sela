@@ -24,6 +24,10 @@
             class="search-input"
             v-model="search_input"
             @keyup="search"
+            @keydown.down.prevent="onSearchArrowDown"
+            @keydown.up.prevent="onSearchArrowUp"
+            @keydown.enter.prevent="onSearchEnter"
+            @keydown.esc="onSearchEscape"
           />
           <button class="action-btn-icon" @click="showModal" :title="$t('Scan')">
             <i class="i-QR-Code"></i>
@@ -31,9 +35,11 @@
           <ul v-if="product_filter && product_filter.length" class="pos-autocomplete-results">
             <li
               class="pos-autocomplete-item"
-              v-for="product_fil in product_filter"
+              :class="{ 'is-highlighted': searchHighlightIndex === index }"
+              v-for="(product_fil, index) in product_filter"
               :key="product_fil.id"
               @mousedown="SearchProduct(product_fil)"
+              @mouseenter="searchHighlightIndex = index"
             >
               {{ getResultValue(product_fil) }}
             </li>
@@ -340,12 +346,23 @@
             class="search-input"
             v-model="search_input"
             @keyup="search"
+            @keydown.down.prevent="onSearchArrowDown"
+            @keydown.up.prevent="onSearchArrowUp"
+            @keydown.enter.prevent="onSearchEnter"
+            @keydown.esc="onSearchEscape"
           />
           <button class="action-btn-icon" @click="showModal" :title="$t('Scan')">
             <i class="i-QR-Code"></i>
           </button>
           <ul v-if="product_filter && product_filter.length" class="pos-autocomplete-results">
-            <li class="pos-autocomplete-item" v-for="product_fil in product_filter" :key="product_fil.id" @mousedown="SearchProduct(product_fil)">
+            <li
+              class="pos-autocomplete-item"
+              :class="{ 'is-highlighted': searchHighlightIndex === index }"
+              v-for="(product_fil, index) in product_filter"
+              :key="product_fil.id"
+              @mousedown="SearchProduct(product_fil)"
+              @mouseenter="searchHighlightIndex = index"
+            >
               {{ getResultValue(product_fil) }}
             </li>
           </ul>
@@ -1989,6 +2006,7 @@ export default {
       timer:null,
       search_input:'',
       product_filter:[],
+      searchHighlightIndex: -1,
       isLoading: true,
       load_product: true,
       GrandTotal: 0,
@@ -4315,6 +4333,7 @@ export default {
                 barcodeStr.includes(term)
               );
             });
+            this.searchHighlightIndex = -1; // Reset highlight on new filter results
           }
         }, 800);
       } else {
@@ -5575,6 +5594,42 @@ export default {
           this.$t("Warning")
         );
       }
+    },
+    // Keyboard navigation for search dropdown
+    onSearchArrowDown() {
+      if (!this.product_filter || !this.product_filter.length) return;
+      if (this.searchHighlightIndex < this.product_filter.length - 1) {
+        this.searchHighlightIndex++;
+      } else {
+        this.searchHighlightIndex = 0; // wrap around
+      }
+    },
+    onSearchArrowUp() {
+      if (!this.product_filter || !this.product_filter.length) return;
+      if (this.searchHighlightIndex > 0) {
+        this.searchHighlightIndex--;
+      } else {
+        this.searchHighlightIndex = this.product_filter.length - 1; // wrap around
+      }
+    },
+    onSearchEnter() {
+      if (this.product_filter && this.product_filter.length && this.searchHighlightIndex >= 0) {
+        const product = this.product_filter[this.searchHighlightIndex];
+        if (product) {
+          this.SearchProduct(product);
+          this.searchHighlightIndex = -1;
+          return;
+        }
+      }
+      // If no item is highlighted but there's only one result, select it
+      if (this.product_filter && this.product_filter.length === 1) {
+        this.SearchProduct(this.product_filter[0]);
+        this.searchHighlightIndex = -1;
+      }
+    },
+    onSearchEscape() {
+      this.product_filter = [];
+      this.searchHighlightIndex = -1;
     },
     print_pos(opts = {}) {
       if (typeof window !== 'undefined' && (window.innerWidth <= 768 || window.matchMedia('(max-width: 768px)').matches)) {
@@ -9632,6 +9687,12 @@ $transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       flex: 1;
     }
   }
+}
+
+/* Keyboard navigation highlight for search dropdown */
+.pos-autocomplete-results .is-highlighted {
+  background: var(--color-primary, #4f46e5) !important;
+  color: #fff !important;
 }
 </style>
 

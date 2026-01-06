@@ -1213,10 +1213,10 @@ export default {
         tax_method: "1",
         discount_method: "1",
         discount: "0",
-        unit_id: "",
-        unit_sale_id: "",
-        unit_purchase_id: "",
-        stock_alert: "0",
+        unit_id: 1,
+        unit_sale_id: 1,
+        unit_purchase_id: 1,
+        stock_alert: 5,
         weight: "",
         image: "",
         note: "",
@@ -2002,6 +2002,14 @@ export default {
         .catch(() => {
           // Fail silently; user can still create product manually
         });
+    } else {
+      // Not duplicating: load sub-units for the default unit ID (1) so sale/purchase dropdowns are populated
+      axios
+        .get("get_sub_units_by_base?id=1")
+        .then(({ data }) => {
+          this.units_sub = data;
+        })
+        .catch(() => {});
     }
 
   }
