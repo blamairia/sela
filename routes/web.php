@@ -202,6 +202,14 @@ Route::group(['middleware' => ['web', 'auth:web', 'Is_Active']], function () {
 });
 
 // ------------------------------------------------------------------\\
+// LICENSE ACTIVATION ROUTES (No auth required)
+Route::middleware(['web'])->group(function () {
+    Route::get('/license/activate', [\App\Http\Controllers\LicenseController::class, 'showActivation'])->name('license.activate');
+    Route::post('/license/activate', [\App\Http\Controllers\LicenseController::class, 'activate'])->name('license.activate.post');
+    Route::get('/license/check', [\App\Http\Controllers\LicenseController::class, 'check'])->name('license.check');
+});
+
+// ------------------------------------------------------------------\\
 
 Route::group(['middleware' => ['web', 'auth:web', 'Is_Active', 'request.safety']], function () {
 
@@ -223,7 +231,7 @@ Route::group(['middleware' => ['web', 'auth:web', 'Is_Active', 'request.safety']
             } else {
                 return view('layouts.master');
             }
-        })->where('vue', '^(?!api|setup|update|password|online_store|customer-display|quickbooks).*$');
+        })->where('vue', '^(?!api|setup|update|password|online_store|customer-display|quickbooks|license).*$');
 
 });
 

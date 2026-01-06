@@ -61,3 +61,12 @@ composer.lock
 *.bak
 *.tmp
 *.temp
+
+# Distribution experiments (desktop packaging)
+/desktop/
+/build/
+/installer/
+/experiments/
+/dist/
+*.msi
+DESKTOP_DISTRIBUTION.md

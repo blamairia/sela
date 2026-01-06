@@ -93,6 +93,8 @@ class Kernel extends HttpKernel
         'store.enabled' => \App\Http\Middleware\EnsureStoreEnabled::class,
         // Security: inactivity auto-logout + token activity tracking (Passport)
         'token.timeout' => \App\Http\Middleware\EnforceApiTokenTimeout::class,
+        // License validation and integrity check
+        'license.check' => \App\Http\Middleware\LicenseCheck::class,
 
     ];
 }
