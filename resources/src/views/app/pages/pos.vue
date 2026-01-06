@@ -3918,6 +3918,48 @@ export default {
       this.$forceUpdate();
     },
 
+    // Global +/- key handler for adjusting last added cart item
+    handleGlobalPlusMinus(e) {
+      // Only handle + and - keys (numpad and regular)
+      const isPlus = e.key === '+' || (e.key === '=' && e.shiftKey) || e.key === 'Add';
+      const isMinus = e.key === '-' || e.key === 'Subtract';
+      if (!isPlus && !isMinus) return;
+
+      // If a modal is open, don't intercept
+      const activeModal = document.querySelector('.modal.show');
+      if (activeModal) return;
+
+      // If cart has items, adjust last added item (index 0)
+      if (this.details && this.details.length > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        const firstItem = this.details[0];
+        if (isPlus) {
+          // Check stock for non-service and non-adhoc
+          if (firstItem.product_type !== 'is_service' && firstItem.product_type !== 'is_adhoc' && !firstItem.is_adhoc) {
+            if (firstItem.quantity + 1 > firstItem.current) {
+              this.makeToast('warning', this.$t('LowStock'), this.$t('Warning'));
+              return;
+            }
+          }
+          firstItem.quantity++;
+        } else {
+          if (firstItem.quantity - 1 < 0) {
+            this.makeToast('warning', this.$t('MinimumQuantity'), this.$t('Warning'));
+            return;
+          }
+          firstItem.quantity--;
+        }
+        this.CalculTotal();
+        this.$forceUpdate();
+      } else if (isPlus) {
+        // Cart is empty, + opens ad-hoc modal
+        e.preventDefault();
+        e.stopPropagation();
+        this.openQuickItemModal();
+      }
+    },
+
     handleProductClick(product) {
       if (!product || (product.product_type !== 'is_service' && product.qte_sale <= 0)) return;
       // Use composite key for variants to avoid overlay conflicting across variants
@@ -6540,6 +6582,13 @@ export default {
       }
     } catch (e) {}
 
+    // Add global +/- key listener for cart quantity adjustment
+    try {
+      if (typeof window !== 'undefined') {
+        window.addEventListener('keydown', this.handleGlobalPlusMinus);
+      }
+    } catch (e) {}
+
   },
   beforeDestroy() {
     try {
@@ -6552,6 +6601,12 @@ export default {
     try {
       if (typeof window !== 'undefined' && window.Fire && window.Fire.$off) {
         window.Fire.$off('offline-sync:auto-result', this.handleAutoOfflineSyncResult);
+      }
+    } catch (e) {}
+    // Remove global +/- key listener
+    try {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('keydown', this.handleGlobalPlusMinus);
       }
     } catch (e) {}
   }
