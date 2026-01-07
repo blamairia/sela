@@ -1070,7 +1070,47 @@ export default {
       this.sendEmail = false;
       this.sendSMS = false;
       this.$refs.paymentModal.show();
+    },
+    
+    // Keyboard handler for Enter (submit) and Escape (close)
+    handleModalKeydown(e) {
+      // Only active when modal is shown
+      if (!this.$refs.paymentModal || !this.$refs.paymentModal.isVisible) return;
+      
+      // Escape: close modal
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.$refs.paymentModal.hide();
+        return;
+      }
+      
+      // Enter: submit payment (unless in textarea or already submitting)
+      if (e.key === 'Enter') {
+        const activeElement = document.activeElement;
+        const isTextarea = activeElement && activeElement.tagName === 'TEXTAREA';
+        
+        // Don't intercept Enter in textarea (allow newlines)
+        if (isTextarea) return;
+        
+        // Prevent double submission
+        if (this.isSubmitting) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        this.submitPayment();
+      }
     }
+  },
+  
+  mounted() {
+    // Add global keyboard listener for Enter/Escape when modal is open
+    window.addEventListener('keydown', this.handleModalKeydown);
+  },
+  
+  beforeDestroy() {
+    // Clean up keyboard listener
+    window.removeEventListener('keydown', this.handleModalKeydown);
   }
 };
 </script>
