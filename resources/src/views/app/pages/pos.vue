@@ -2011,6 +2011,8 @@ export default {
       multiplyModeActive: false,
       multiplyBuffer: '',
       multiplyTimeout: null,
+      // Last completed sale ID for F12 reprint
+      lastCompletedSaleId: null,
       isLoading: true,
       load_product: true,
       GrandTotal: 0,
@@ -3924,8 +3926,105 @@ export default {
 
     // Global +/- key handler for adjusting last added cart item
     // Also handles * (multiply) mode: press * then type digits, apply on Enter or timeout
+    // Also handles F-key shortcuts: F2 (Pay), F3 (customer), F4 (hold), F5 (reset), F8 (quick item), F12 (print)
     handleGlobalPlusMinus(e) {
-      // If a modal is open, don't intercept anything
+      // ===== F-KEY SHORTCUTS (always active, even in modals for some) =====
+      const isFKey = e.key.startsWith('F') && /^F\d+$/.test(e.key);
+      const isDelete = e.key === 'Delete' || e.key === 'Backspace';
+      
+      // F2: Open Payment Modal (Pay Now)
+      if (e.key === 'F2') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.details && this.details.length > 0 && !this.paymentProcessing) {
+          this.openModernPaymentModal();
+        } else if (this.details.length === 0) {
+          this.makeToast('warning', this.$t('CartEmpty') || 'Cart is empty', this.$t('Warning'));
+        }
+        return;
+      }
+      
+      // F3: Focus Customer Search
+      if (e.key === 'F3') {
+        e.preventDefault();
+        e.stopPropagation();
+        // Focus the customer select (v-select)
+        this.$nextTick(() => {
+          const customerSelect = document.querySelector('.customer-select-header input');
+          if (customerSelect) {
+            customerSelect.focus();
+            customerSelect.click();
+          }
+        });
+        return;
+      }
+      
+      // F4: Hold/Save Draft
+      if (e.key === 'F4') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.details && this.details.length > 0 && !this.DraftProcessing && this.isOnline && this.pos_settings?.enable_hold_sales) {
+          this.Submit_Draft();
+        } else if (this.details.length === 0) {
+          this.makeToast('warning', this.$t('CartEmpty') || 'Cart is empty', this.$t('Warning'));
+        } else if (!this.isOnline) {
+          this.makeToast('warning', this.$t('OfflineHoldNotAvailable') || 'Hold not available offline', this.$t('Warning'));
+        }
+        return;
+      }
+      
+      // F5: Clear Cart / Reset POS
+      if (e.key === 'F5') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.details && this.details.length > 0) {
+          // Confirm before clearing (optional - direct clear for speed)
+          this.Reset_Pos();
+          this.makeToast('info', this.$t('CartCleared') || 'Cart cleared', this.$t('Info') || 'Info');
+        }
+        return;
+      }
+      
+      // F8: Open Quick Item Modal
+      if (e.key === 'F8') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.openQuickItemModal();
+        return;
+      }
+      
+      // F12: Print Last Receipt (if available)
+      if (e.key === 'F12') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.lastCompletedSaleId) {
+          this.Invoice_POS(this.lastCompletedSaleId);
+        } else {
+          this.makeToast('warning', this.$t('NoRecentSale') || 'No recent sale to print', this.$t('Warning'));
+        }
+        return;
+      }
+      
+      // Delete/Backspace: Remove last added item (only when not in input)
+      if (isDelete) {
+        const activeElement = document.activeElement;
+        const isInInput = activeElement && (
+          activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.isContentEditable
+        );
+        
+        if (!isInInput && this.details && this.details.length > 0) {
+          e.preventDefault();
+          e.stopPropagation();
+          const lastItem = this.details[0];
+          this.delete_Product_Detail(lastItem.detail_id);
+          this.makeToast('info', `${lastItem.name} ${this.$t('Removed') || 'removed'}`, this.$t('Info') || 'Info');
+          return;
+        }
+      }
+
+      // If a modal is open, don't intercept quantity/multiply shortcuts
       const activeModal = document.querySelector('.modal.show');
       if (activeModal) return;
 
@@ -6222,6 +6321,15 @@ export default {
         });
     },
     onModernPaymentSuccess(evt) {
+      // Capture the completed sale ID for F12 reprint feature
+      try {
+        if (evt && evt.saleId) {
+          this.lastCompletedSaleId = evt.saleId;
+        } else if (evt && evt.sale && evt.sale.id) {
+          this.lastCompletedSaleId = evt.sale.id;
+        }
+      } catch(e) {}
+      
       // If this was an offline-queued sale, build a local invoice and print it
       try {
         if (evt && evt.offline && evt.payload) {
