@@ -1315,6 +1315,48 @@ class PosController extends BaseController
         $detail_id = 0;
         foreach ($draft_sale_data['details'] as $detail) {
 
+            // Handle ad-hoc items (no product reference)
+            if ($detail->is_adhoc || $detail->product_id === null) {
+                $data = [
+                    'id' => $detail->id,
+                    'detail_id' => $detail_id += 1,
+                    'product_id' => null,
+                    'product_variant_id' => null,
+                    'code' => 'OTHER',
+                    'name' => $detail->adhoc_name ?? 'Quick Item',
+                    'product_type' => 'is_adhoc',
+                    'is_adhoc' => true,
+                    'adhoc_name' => $detail->adhoc_name ?? 'Quick Item',
+                    'adhoc_cost' => $detail->adhoc_cost ?? 0,
+                    'adhoc_price' => $detail->adhoc_price ?? $detail->price,
+                    'quantity' => $detail->quantity,
+                    'qte_copy' => $detail->quantity,
+                    'Unit_price' => $detail->price,
+                    'Net_price' => $detail->price,
+                    'Total_price' => $detail->price,
+                    'subtotal' => $detail->total,
+                    'total' => $detail->total,
+                    'tax_percent' => $detail->TaxNet ?? 0,
+                    'tax_method' => $detail->tax_method ?? '1',
+                    'taxe' => 0,
+                    'discount' => $detail->discount ?? 0,
+                    'discount_Method' => $detail->discount_method ?? '2',
+                    'DiscountNet' => $detail->discount ?? 0,
+                    'sale_unit_id' => 1,
+                    'unitSale' => '',
+                    'fix_stock' => '---',
+                    'current' => '---',
+                    'del' => 0,
+                    'etat' => 'current',
+                    'is_imei' => false,
+                    'imei_number' => null,
+                    'price_type' => $detail->price_type ?? 'retail',
+                    'no_unit' => 0,
+                ];
+                $details[] = $data;
+                continue;
+            }
+
             // check if detail has sale_unit_id Or Null
             if ($detail->sale_unit_id !== null) {
                 $unit = Unit::where('id', $detail->sale_unit_id)->first();

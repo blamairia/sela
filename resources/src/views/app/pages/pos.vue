@@ -2660,7 +2660,7 @@ export default {
         tax_percent: 0,
       };
       
-      this.details.push(adhocDetail);
+      this.details.unshift(adhocDetail);
       this.CalculTotal();
       
       // Show brief success feedback
