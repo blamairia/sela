@@ -137,13 +137,24 @@
                     :placeholder="$t('Scan_Search_Product_by_Code_Name')"
                     @input='e => search_input = e.target.value' 
                     @keyup="search(search_input)"
+                    @keydown.down.prevent="onSearchArrowDown"
+                    @keydown.up.prevent="onSearchArrowUp"
+                    @keydown.enter.prevent="onSearchEnter"
+                    @keydown.esc="onSearchEscape"
                     @focus="handleFocus"
                     @blur="handleBlur"
                     ref="product_autocomplete"
                     class="autocomplete-input modern-input" />
                 </div>
                 <ul class="autocomplete-result-list" v-show="focused">
-                  <li class="autocomplete-result" v-for="product_fil in product_filter" @mousedown="SearchProduct(product_fil)">
+                  <li 
+                    class="autocomplete-result" 
+                    v-for="(product_fil, index) in product_filter" 
+                    :key="index"
+                    :class="{ 'is-highlighted': index === searchHighlightIndex }"
+                    @mouseenter="searchHighlightIndex = index"
+                    @mousedown="SearchProduct(product_fil)"
+                  >
                     {{getResultValue(product_fil)}}
                   </li>
                 </ul>
@@ -283,8 +294,10 @@
 import VueBarcode from "vue-barcode";
 import NProgress from "nprogress";
 import { mapActions, mapGetters } from "vuex";
+import productSearchKeyboardMixin from "@/mixins/productSearchKeyboardMixin";
 
 export default {
+  mixins: [productSearchKeyboardMixin],
   components: {
     barcode: VueBarcode
   },
@@ -1331,5 +1344,11 @@ export default {
 
   ::v-deep .v-select.vs--open .vs__dropdown-toggle {
     border-color: #8b5cf6;
+  }
+
+  /* Keyboard navigation highlight for autocomplete */
+  .autocomplete-result.is-highlighted {
+    background-color: #667eea;
+    color: white;
   }
 </style>
