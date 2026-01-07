@@ -103,13 +103,24 @@
                      :placeholder="$t('Scan_Search_Product_by_Code_Name')"
                        @input='e => search_input = e.target.value' 
                       @keyup="search(search_input)"
+                      @keydown.down.prevent="onSearchArrowDown"
+                      @keydown.up.prevent="onSearchArrowUp"
+                      @keydown.enter.prevent="onSearchEnter"
+                      @keydown.esc="onSearchEscape"
                       @focus="handleFocus"
                       @blur="handleBlur"
                       ref="product_autocomplete"
                       class="autocomplete-input" />
                     </div>
                     <ul class="autocomplete-result-list" v-show="focused">
-                      <li class="autocomplete-result" v-for="product_fil in product_filter" @mousedown="SearchProduct(product_fil)">{{getResultValue(product_fil)}}</li>
+                      <li 
+                        class="autocomplete-result" 
+                        v-for="(product_fil, index) in product_filter" 
+                        :key="index"
+                        :class="{ 'is-highlighted': index === searchHighlightIndex }"
+                        @mouseenter="searchHighlightIndex = index"
+                        @mousedown="SearchProduct(product_fil)"
+                      >{{getResultValue(product_fil)}}</li>
                     </ul>
                 </div>
                 </b-col>
@@ -832,8 +843,10 @@
 <script>
 import { mapActions, mapGetters } from "vuex";
 import NProgress from "nprogress";
+import productSearchKeyboardMixin from "@/mixins/productSearchKeyboardMixin";
 
 export default {
+  mixins: [productSearchKeyboardMixin],
   metaInfo: {
     title: "Create Sale"
   },
@@ -2190,5 +2203,11 @@ export default {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     white-space: nowrap;
+  }
+
+  /* Keyboard navigation highlight for autocomplete */
+  .autocomplete-result.is-highlighted {
+    background-color: #667eea;
+    color: white;
   }
 </style>

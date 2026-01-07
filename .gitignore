@@ -62,11 +62,17 @@ composer.lock
 *.tmp
 *.temp
 
-# Distribution experiments (desktop packaging)
-/desktop/
-/build/
-/installer/
+# Desktop Distribution Experiments
+# NOTE: On exp/* branches, these directories ARE tracked via local overrides
 /experiments/
 /dist/
+/build/
+/installer/
+
+# Build artifacts (always ignored)
 *.msi
-DESKTOP_DISTRIBUTION.md
+*.exe
+*.dmg
+*.deb
+*.rpm
+*.AppImage
