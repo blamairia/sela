@@ -1920,6 +1920,54 @@
         </button>
       </div>
     </div>
+
+    <!-- Keyboard Shortcuts Help Button (floating) -->
+    <button 
+      class="keyboard-help-btn" 
+      @click="showKeyboardHelp = !showKeyboardHelp"
+      :title="$t('KeyboardShortcuts') || 'Keyboard Shortcuts'"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+        <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"></path>
+      </svg>
+      <span v-if="!showKeyboardHelp">?</span>
+      <span v-else>×</span>
+    </button>
+
+    <!-- Keyboard Shortcuts Panel -->
+    <transition name="fade">
+      <div v-if="showKeyboardHelp" class="keyboard-shortcuts-panel">
+        <div class="shortcuts-header">
+          <h4>⌨️ {{ $t('KeyboardShortcuts') || 'Keyboard Shortcuts' }}</h4>
+          <button class="close-btn" @click="showKeyboardHelp = false">×</button>
+        </div>
+        <div class="shortcuts-content">
+          <div class="shortcut-group">
+            <h5>{{ $t('Actions') || 'Actions' }}</h5>
+            <div class="shortcut-item"><kbd>F2</kbd> <span>{{ $t('pos.Pay_Now') || 'Pay Now' }}</span></div>
+            <div class="shortcut-item"><kbd>F3</kbd> <span>{{ $t('CustomerSearch') || 'Customer Search' }}</span></div>
+            <div class="shortcut-item"><kbd>F4</kbd> <span>{{ $t('pos.Hold') || 'Hold/Save Draft' }}</span></div>
+            <div class="shortcut-item"><kbd>F5</kbd> <span>{{ $t('pos.Reset') || 'Reset/Clear Cart' }}</span></div>
+            <div class="shortcut-item"><kbd>F8</kbd> <span>{{ $t('QuickItem') || 'Quick Item' }}</span></div>
+            <div class="shortcut-item"><kbd>F12</kbd> <span>{{ $t('ReprintLast') || 'Reprint Last Sale' }}</span></div>
+          </div>
+          <div class="shortcut-group">
+            <h5>{{ $t('Quantity') || 'Quantity' }}</h5>
+            <div class="shortcut-item"><kbd>+</kbd> <span>{{ $t('IncrementQty') || 'Increase Qty' }}</span></div>
+            <div class="shortcut-item"><kbd>-</kbd> <span>{{ $t('DecrementQty') || 'Decrease Qty' }}</span></div>
+            <div class="shortcut-item"><kbd>*</kbd><kbd>123</kbd> <span>{{ $t('SetExactQty') || 'Set Exact Qty' }}</span></div>
+            <div class="shortcut-item"><kbd>Del</kbd> <span>{{ $t('RemoveItem') || 'Remove Item' }}</span></div>
+          </div>
+          <div class="shortcut-group">
+            <h5>{{ $t('Navigation') || 'Navigation' }}</h5>
+            <div class="shortcut-item"><kbd>↑</kbd><kbd>↓</kbd> <span>{{ $t('NavigateResults') || 'Navigate Results' }}</span></div>
+            <div class="shortcut-item"><kbd>Enter</kbd> <span>{{ $t('SelectProduct') || 'Select Product' }}</span></div>
+            <div class="shortcut-item"><kbd>Esc</kbd> <span>{{ $t('ClearSearch') || 'Clear/Cancel' }}</span></div>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -2013,6 +2061,8 @@ export default {
       multiplyTimeout: null,
       // Last completed sale ID for F12 reprint
       lastCompletedSaleId: null,
+      // Keyboard shortcuts help visibility
+      showKeyboardHelp: false,
       isLoading: true,
       load_product: true,
       GrandTotal: 0,
@@ -10055,6 +10105,184 @@ $transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 .pos-autocomplete-results .is-highlighted {
   background: var(--color-primary, #4f46e5) !important;
   color: #fff !important;
+}
+
+/* Keyboard Shortcuts Help Button */
+.keyboard-help-btn {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  z-index: 1000;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  span {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    font-size: 14px;
+    font-weight: bold;
+    background: white;
+    color: #667eea;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Keyboard Shortcuts Panel */
+.keyboard-shortcuts-panel {
+  position: fixed;
+  bottom: 150px;
+  right: 20px;
+  width: 320px;
+  max-height: 70vh;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  overflow: hidden;
+
+  .shortcuts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+
+    h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+  }
+
+  .shortcuts-content {
+    padding: 16px 20px;
+    max-height: calc(70vh - 60px);
+    overflow-y: auto;
+  }
+
+  .shortcut-group {
+    margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h5 {
+      margin: 0 0 10px 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .shortcut-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 13px;
+    color: #374151;
+
+    kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 24px;
+      padding: 0 6px;
+      background: linear-gradient(180deg, #f9fafb 0%, #e5e7eb 100%);
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: #374151;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    span {
+      flex: 1;
+      color: #6b7280;
+    }
+  }
+}
+
+/* Fade transition for panel */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+}
+
+/* Responsive adjustments for keyboard panel */
+@media (max-width: 480px) {
+  .keyboard-help-btn {
+    bottom: 100px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .keyboard-shortcuts-panel {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    bottom: 160px;
+  }
 }
 </style>
 
