@@ -343,7 +343,9 @@ export default {
         date: new Date().toISOString().split('T')[0],
         reference: '',
         notes: ''
-      }
+      },
+      // Track modal visibility for keyboard handling
+      modalVisible: false
     };
   },
   watch: {
@@ -1037,6 +1039,7 @@ export default {
       this.saleNote = '';
       this.isCardInputComplete = false;
       this.isSubmitting = false;
+      this.modalVisible = false;
       this.currentSaleUuid = null;
     },
     openModal(data = {}) {
@@ -1069,13 +1072,15 @@ export default {
       this.saleNote = '';
       this.sendEmail = false;
       this.sendSMS = false;
+      this.modalVisible = true;
       this.$refs.paymentModal.show();
     },
     
     // Keyboard handler for Enter (submit) and Escape (close)
     handleModalKeydown(e) {
       // Only active when modal is shown
-      if (!this.$refs.paymentModal || !this.$refs.paymentModal.isVisible) return;
+      // Only active when modal is shown
+      if (!this.modalVisible) return;
       
       // Escape: close modal
       if (e.key === 'Escape') {
