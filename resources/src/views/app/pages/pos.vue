@@ -5,7 +5,7 @@
       <div class="header-left">
         <div class="brand">
           <router-link to="/app/dashboard" class="brand-icon">
-            <img v-if="currentUser && currentUser.logo" :src="'/images/'+currentUser.logo" alt="logo" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" />
+            <img v-if="currentUser && currentUser.logo" :src="'/images/'+currentUser.logo" alt="logo" style="width:100%;height:100%;object-fit:contain;border-radius:12px;" />
             <span v-else>{{ (currentUser && currentUser.company) ? (currentUser.company[0] || 'S') : 'S' }}</span>
           </router-link>
          

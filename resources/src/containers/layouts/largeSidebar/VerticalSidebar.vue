@@ -19,9 +19,6 @@
               {{ (currentUser && currentUser.company) ? currentUser.company[0] : 'S' }}
             </div>
           </div>
-          <div class="company-name" v-if="!isCollapsed && currentUser">
-            {{ currentUser.company || 'Sela' }}
-          </div>
         </div>
       </div>
 
@@ -1543,7 +1540,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 15px;
+  padding: 5px 3rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .header-brand {
@@ -1559,8 +1558,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 45px;
-  height: 45px;
+  max-height: 60px;
+  max-width: 225px;
   border-radius: 12px;
   flex-shrink: 0;
   transition: all 0.3s ease;
@@ -1579,7 +1578,9 @@ export default {
 .logo-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  max-height: 60px;
+  max-width: 225px;
+  object-fit: contain;
 }
 
 .logo-placeholder {
