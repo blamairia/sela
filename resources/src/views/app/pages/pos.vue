@@ -2007,6 +2007,10 @@ export default {
       search_input:'',
       product_filter:[],
       searchHighlightIndex: -1,
+      // Multiply mode state for *{number} shortcut
+      multiplyModeActive: false,
+      multiplyBuffer: '',
+      multiplyTimeout: null,
       isLoading: true,
       load_product: true,
       GrandTotal: 0,
@@ -3919,15 +3923,103 @@ export default {
     },
 
     // Global +/- key handler for adjusting last added cart item
+    // Also handles * (multiply) mode: press * then type digits, apply on Enter or timeout
     handleGlobalPlusMinus(e) {
-      // Only handle + and - keys (numpad and regular)
-      const isPlus = e.key === '+' || (e.key === '=' && e.shiftKey) || e.key === 'Add';
-      const isMinus = e.key === '-' || e.key === 'Subtract';
-      if (!isPlus && !isMinus) return;
-
-      // If a modal is open, don't intercept
+      // If a modal is open, don't intercept anything
       const activeModal = document.querySelector('.modal.show');
       if (activeModal) return;
+
+      // Check if user is in a regular input (not product search)
+      const activeElement = document.activeElement;
+      const isProductSearch = activeElement && (
+        activeElement.classList.contains('search-input') ||
+        activeElement.classList.contains('autocomplete-input')
+      );
+      const isRegularInput = activeElement && (
+        (activeElement.tagName === 'INPUT' && !isProductSearch) ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.tagName === 'SELECT' ||
+        activeElement.isContentEditable
+      );
+
+      // Detect key types
+      const isPlus = e.key === '+' || (e.key === '=' && e.shiftKey) || e.key === 'Add';
+      const isMinus = e.key === '-' || e.key === 'Subtract';
+      const isMultiply = e.key === '*' || e.key === 'Multiply';
+      const isDigit = /^[0-9]$/.test(e.key);
+      const isDecimal = e.key === '.' || e.key === ',';
+      const isEnter = e.key === 'Enter';
+      const isEscape = e.key === 'Escape';
+      const isBackspace = e.key === 'Backspace';
+
+      // Handle multiply mode
+      if (this.multiplyModeActive) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (isDigit) {
+          // Add digit to buffer
+          this.multiplyBuffer += e.key;
+          this.resetMultiplyTimeout();
+          // Show visual feedback
+          this.showMultiplyFeedback();
+          return;
+        }
+        
+        if (isDecimal && !this.multiplyBuffer.includes('.')) {
+          // Allow one decimal point
+          this.multiplyBuffer += '.';
+          this.resetMultiplyTimeout();
+          this.showMultiplyFeedback();
+          return;
+        }
+        
+        if (isBackspace) {
+          // Remove last character
+          this.multiplyBuffer = this.multiplyBuffer.slice(0, -1);
+          if (this.multiplyBuffer === '') {
+            this.cancelMultiplyMode();
+          } else {
+            this.resetMultiplyTimeout();
+            this.showMultiplyFeedback();
+          }
+          return;
+        }
+        
+        if (isEnter || isPlus || isMinus || isMultiply) {
+          // Apply the multiplied quantity
+          this.applyMultiplyQuantity();
+          return;
+        }
+        
+        if (isEscape) {
+          this.cancelMultiplyMode();
+          return;
+        }
+
+        // Any other key cancels multiply mode
+        this.cancelMultiplyMode();
+        return;
+      }
+
+      // Not in multiply mode - handle +, -, * triggers
+      
+      // If in regular input (not product search), don't intercept
+      if (isRegularInput && !isMultiply) return;
+
+      // Handle * to enter multiply mode (only if cart has items)
+      if (isMultiply && this.details && this.details.length > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.multiplyModeActive = true;
+        this.multiplyBuffer = '';
+        this.resetMultiplyTimeout();
+        this.showMultiplyFeedback();
+        return;
+      }
+
+      // Handle + and -
+      if (!isPlus && !isMinus) return;
 
       // If cart has items, adjust last added item (index 0)
       if (this.details && this.details.length > 0) {
@@ -3957,6 +4049,109 @@ export default {
         e.preventDefault();
         e.stopPropagation();
         this.openQuickItemModal();
+      }
+    },
+
+    // Reset the auto-apply timeout for multiply mode
+    resetMultiplyTimeout() {
+      if (this.multiplyTimeout) {
+        clearTimeout(this.multiplyTimeout);
+      }
+      // Auto-apply after 1.5 seconds of inactivity
+      this.multiplyTimeout = setTimeout(() => {
+        if (this.multiplyModeActive && this.multiplyBuffer) {
+          this.applyMultiplyQuantity();
+        } else {
+          this.cancelMultiplyMode();
+        }
+      }, 1500);
+    },
+
+    // Apply the quantity from multiply buffer
+    applyMultiplyQuantity() {
+      const quantity = parseFloat(this.multiplyBuffer);
+      if (isNaN(quantity) || quantity <= 0) {
+        this.makeToast('warning', this.$t('InvalidQuantity') || 'Invalid quantity', this.$t('Warning'));
+        this.cancelMultiplyMode();
+        return;
+      }
+
+      if (this.details && this.details.length > 0) {
+        const firstItem = this.details[0];
+        
+        // Check stock for non-service and non-adhoc items
+        if (firstItem.product_type !== 'is_service' && firstItem.product_type !== 'is_adhoc' && !firstItem.is_adhoc) {
+          if (quantity > firstItem.current) {
+            this.makeToast('warning', this.$t('LowStock') + ` (${this.$t('Available')}: ${firstItem.current})`, this.$t('Warning'));
+            this.cancelMultiplyMode();
+            return;
+          }
+        }
+
+        firstItem.quantity = quantity;
+        this.CalculTotal();
+        this.$forceUpdate();
+        this.makeToast('success', `${this.$t('Quantity')} → ${quantity}`, this.$t('Updated') || 'Updated');
+      }
+      
+      this.cancelMultiplyMode();
+    },
+
+    // Cancel multiply mode and clear state
+    cancelMultiplyMode() {
+      this.multiplyModeActive = false;
+      this.multiplyBuffer = '';
+      if (this.multiplyTimeout) {
+        clearTimeout(this.multiplyTimeout);
+        this.multiplyTimeout = null;
+      }
+      // Remove visual feedback
+      this.hideMultiplyFeedback();
+    },
+
+    // Show visual feedback for multiply mode (toast showing current buffer)
+    showMultiplyFeedback() {
+      // Use a simple approach - show inline feedback or a temporary toast
+      const displayValue = this.multiplyBuffer || '_';
+      const productName = this.details && this.details.length > 0 ? this.details[0].name : '';
+      
+      // Update or create a floating indicator
+      let indicator = document.getElementById('multiply-mode-indicator');
+      if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'multiply-mode-indicator';
+        indicator.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(102, 126, 234, 0.95);
+          color: white;
+          padding: 20px 40px;
+          border-radius: 12px;
+          font-size: 24px;
+          font-weight: bold;
+          z-index: 10000;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+          text-align: center;
+          min-width: 200px;
+        `;
+        document.body.appendChild(indicator);
+      }
+      indicator.innerHTML = `
+        <div style="font-size: 14px; opacity: 0.8; margin-bottom: 8px;">✖ ${this.$t('SetQuantity') || 'Set Quantity'}</div>
+        <div style="font-size: 36px;">${displayValue}</div>
+        <div style="font-size: 12px; opacity: 0.7; margin-top: 8px;">${productName}</div>
+        <div style="font-size: 11px; opacity: 0.5; margin-top: 8px;">Enter to apply • Esc to cancel</div>
+      `;
+      indicator.style.display = 'block';
+    },
+
+    // Hide visual feedback for multiply mode
+    hideMultiplyFeedback() {
+      const indicator = document.getElementById('multiply-mode-indicator');
+      if (indicator) {
+        indicator.style.display = 'none';
       }
     },
 
@@ -6608,6 +6803,10 @@ export default {
       if (typeof window !== 'undefined') {
         window.removeEventListener('keydown', this.handleGlobalPlusMinus);
       }
+    } catch (e) {}
+    // Clean up multiply mode
+    try {
+      this.cancelMultiplyMode();
     } catch (e) {}
   }
 };
