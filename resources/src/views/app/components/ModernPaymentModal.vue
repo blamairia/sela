@@ -260,7 +260,7 @@
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-          {{$t('Cancel')}} <kbd class="btn-kbd">Esc</kbd>
+          {{$t('Cancel')}}
         </button>
         <button
           type="button"
@@ -272,7 +272,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
             </svg>
-            {{ isEditMode ? $t('Update_Payment') : $t('Complete_Payment') }} <kbd class="btn-kbd">Enter</kbd>
+            {{ isEditMode ? $t('Update_Payment') : $t('Complete_Payment') }}
           </span>
           <span v-else class="btn-content">
             <span class="loading-spinner"></span>
@@ -2282,31 +2282,6 @@ export default {
     overflow-y: visible;
     max-height: none;
   }
-}
-
-/* Keyboard shortcut hints in buttons */
-.btn-kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 18px;
-  padding: 0 5px;
-  margin-left: 6px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  font-family: 'SF Mono', Monaco, 'Consolas', monospace;
-  font-size: 10px;
-  font-weight: 600;
-  color: inherit;
-  opacity: 0.8;
-  vertical-align: middle;
-}
-
-.footer-cancel .btn-kbd {
-  background: rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 0, 0, 0.15);
 }
 </style>
 
