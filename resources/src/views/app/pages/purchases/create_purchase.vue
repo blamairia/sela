@@ -610,9 +610,10 @@
 import { mapActions, mapGetters } from "vuex";
 import NProgress from "nprogress";
 import productSearchKeyboardMixin from "@/mixins/productSearchKeyboardMixin";
+import quantityShortcutMixin from "@/mixins/quantityShortcutMixin";
 
 export default {
-  mixins: [productSearchKeyboardMixin],
+  mixins: [productSearchKeyboardMixin, quantityShortcutMixin],
   metaInfo: {
     title: "Create Purchase"
   },
