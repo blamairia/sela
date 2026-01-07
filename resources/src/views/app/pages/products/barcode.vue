@@ -311,7 +311,7 @@ export default {
       ShowCard: false,
       barcode: {
         product_id: "",
-        warehouse_id: "",
+        warehouse_id: 1,
         qte: 10
       },
       count: "",
@@ -877,6 +877,8 @@ export default {
   //-----------------------------Created function-------------------
   created: function() {
     this.Get_Elements();
+    // Load products for default warehouse 1
+    this.Get_Products_By_Warehouse(1);
 
     const purchaseId = this.$route && this.$route.query
       ? this.$route.query.purchase_id

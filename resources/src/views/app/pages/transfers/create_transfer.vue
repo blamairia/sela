@@ -504,7 +504,7 @@ export default {
       symbol: "",
       transfer: {
         id: "",
-        from_warehouse: "",
+        from_warehouse: 1,
         to_warehouse: "",
         statut: "completed",
         notes: "",
@@ -1097,6 +1097,8 @@ export default {
   //----------------------------- Created function-------------------
   created: function() {
     this.Get_Elements();
+    // Load products for default warehouse 1
+    this.Get_Products_By_Warehouse(1);
   }
 };
 </script>

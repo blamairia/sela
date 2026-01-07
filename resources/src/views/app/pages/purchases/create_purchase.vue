@@ -657,7 +657,7 @@ export default {
         statut: "received",
         notes: "",
         supplier_id: "",
-        warehouse_id: "",
+        warehouse_id: 1,
         tax_rate: 0,
         TaxNet: 0,
         shipping: 0,
@@ -1314,6 +1314,8 @@ export default {
   //-----------------------------  Created function-------------------
   created() {
     this.GetElements();
+    // Load products for default warehouse 1
+    this.Get_Products_By_Warehouse(1);
   }
 };
 </script>
