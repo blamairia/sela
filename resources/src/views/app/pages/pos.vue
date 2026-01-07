@@ -1885,7 +1885,7 @@
             <path d="M20.49 9A9 9 0 0 0 5.64 5.64"></path>
             <path d="M3.51 15A9 9 0 0 0 18.36 18.36"></path>
           </svg>
-          <span>{{ $t('pos.Reset') }}</span>
+          <span>{{ $t('pos.Reset') }} <kbd class="btn-kbd">F5</kbd></span>
         </button>
 
         <button class="action-btn action-btn-secondary" @click="Show_Draft_Sales" :title="$t('pos.Drafts_list')" v-if="isOnline">
@@ -1902,7 +1902,7 @@
             <path d="M10 9v6"></path>
             <path d="M14 9v6"></path>
           </svg>
-          <span>{{ DraftProcessing ? $t('pos.Saving') : $t('pos.Hold') }}</span>
+          <span>{{ DraftProcessing ? $t('pos.Saving') : $t('pos.Hold') }} <kbd class="btn-kbd">F4</kbd></span>
         </button>
 
         <div class="footer-space"></div>
@@ -1916,7 +1916,7 @@
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"></path>
           </svg>
-          <span>{{ paymentProcessing ? $t('pos.Processing') : $t('pos.Pay_Now') }}</span>
+          <span>{{ paymentProcessing ? $t('pos.Processing') : $t('pos.Pay_Now') }} <kbd class="btn-kbd">F2</kbd></span>
         </button>
       </div>
     </div>
@@ -10283,6 +10283,31 @@ $transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     width: auto;
     bottom: 160px;
   }
+}
+
+/* Keyboard shortcut hints in buttons */
+.btn-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: inherit;
+  opacity: 0.8;
+  vertical-align: middle;
+}
+
+.action-btn-secondary .btn-kbd {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 </style>
 
