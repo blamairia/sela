@@ -76,3 +76,9 @@ composer.lock
 *.deb
 *.rpm
 *.AppImage
+
+# Licensing
+private.key
+server.lic
+id_test.php
+debug_error.log
