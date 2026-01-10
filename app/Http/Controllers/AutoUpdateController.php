@@ -72,7 +72,7 @@ class AutoUpdateController extends Controller
                 return response()->json(['message' => 'Update URL not found'], 400);
             }
 
-            if (! $this->isAllowedHost($downloadUrl, ['update-stocky.ui-lib.com'])) {
+            if (! $this->isAllowedHost($downloadUrl, ['comm'])) {
                 $this->logUpdate('Blocked update from untrusted host: '.$downloadUrl);
                 Artisan::call('up');
 

@@ -286,7 +286,7 @@ Route::middleware(['auth:api', 'Is_Active', 'request.safety', 'token.timeout'])-
     // --------------------------------------------------------------------\\
     Route::resource('attendances', 'hrm\AttendancesController');
     Route::get('daily_attendance', "hrm\AttendancesController@daily_attendance")->name('daily_attendance');
-    Route::post('attendance_by_employee/{id}', 'hrm\EmployeeSessionController@attendance_by_employee')->name('attendance_by_employee.post');
+    // Route::post('attendance_by_employee/{id}', 'hrm\EmployeeSessionController@attendance_by_employee')->name('attendance_by_employee.post');
     Route::post('attendances/delete/by_selection', "hrm\AttendancesController@delete_by_selection");
 
     // ------------------------------- Request leave  -----------------------\\
@@ -759,9 +759,9 @@ Route::middleware(['auth:api', 'Is_Active', 'request.safety', 'token.timeout'])-
 
     // ------------------------------- Module Settings ------------------------\\
 
-    Route::get('get_modules_info', 'ModuleSettingsController@get_modules_info');
-    Route::post('update_status_module', 'ModuleSettingsController@update_status_module');
-    Route::post('upload_module', 'ModuleSettingsController@upload_module');
+    // Route::get('get_modules_info', 'ModuleSettingsController@get_modules_info');
+    // Route::post('update_status_module', 'ModuleSettingsController@update_status_module');
+    // Route::post('upload_module', 'ModuleSettingsController@upload_module');
 
     // ---------------- WooCommerce Sync (optional module) ----------------
     Route::get('woocommerce/settings', 'WooCommerceSyncController@getSettings');

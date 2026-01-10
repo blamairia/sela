@@ -44,18 +44,20 @@ if (!file_exists('private.key')) {
 // 2. Get Arguments
 $hwid = $argv[1] ?? 'E7BC85FF662E6E09'; // Default to your machine ID
 $expiry = $argv[2] ?? '2030-12-31';
+$maxClients = $argv[3] ?? 3; // Default 3 Terminals
 
 echo "------------------------------------------------\n";
 echo "🔐 SELA LICENSE GENERATOR\n";
 echo "Target HWID: $hwid\n";
 echo "Expiry Date: $expiry\n";
+echo "Max Clients: $maxClients\n";
 echo "------------------------------------------------\n";
 
 // 3. Create Payload
 $payload = [
     'hwid' => $hwid,
     'expiry' => $expiry,
-    'max_clients' => 5,
+    'max_clients' => (int)$maxClients,
     'generated_at' => date('Y-m-d H:i:s'),
     'type' => 'server_license'
 ];

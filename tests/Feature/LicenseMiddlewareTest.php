@@ -255,4 +255,20 @@ class LicenseMiddlewareTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('SUCCESS_ACCESS');
     }
+    /** @test */
+    public function it_allows_access_to_license_routes_without_restriction()
+    {
+        // Even if license is missing or invalid
+        Storage::put('server.lic', 'GARBAGE');
+        
+        // Define a license route (mocking the real one)
+        Route::middleware([EnsureClientAuthorized::class])->get('/license/check', function () {
+            return 'LICENSE_PAGE';
+        });
+
+        $response = $this->call('GET', '/license/check', [], [], [], ['REMOTE_ADDR' => '1.2.3.4']);
+
+        $response->assertStatus(200);
+        $response->assertSee('LICENSE_PAGE');
+    }
 }

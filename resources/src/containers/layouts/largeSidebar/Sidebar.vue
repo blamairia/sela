@@ -1299,6 +1299,16 @@
             </router-link>
           </li>
 
+          <li
+            class="nav-item"
+            v-if="currentUserPermissions && currentUserPermissions.includes('setting_system')"
+          >
+            <router-link tag="a" class to="/admin/terminals">
+              <i class="nav-icon i-Lock-2"></i>
+              <span class="item-name">POS Terminals</span>
+            </router-link>
+          </li>
+
         
 
           <li

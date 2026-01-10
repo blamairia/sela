@@ -883,6 +883,14 @@
                   <span>{{ $t('SystemSettings') }}</span>
                 </router-link>
               </li>
+              
+              <!-- POS TERMINAL MANAGEMENT -->
+              <li class="submenu-item" v-if="currentUserPermissions && currentUserPermissions.includes('setting_system')">
+                <router-link to="/admin/terminals" class="submenu-link">
+                  <i class="submenu-icon i-Lock-2"></i>
+                  <span>POS Terminals</span>
+                </router-link>
+              </li>
 
              
               <li class="submenu-item" v-if="currentUserPermissions && currentUserPermissions.includes('woocommerce_settings')">

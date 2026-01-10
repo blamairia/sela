@@ -117,4 +117,23 @@ EOD;
             return "License verification failed.";
         }
     }
+
+    /**
+     * Get the decoded payload of the valid license.
+     * @return array|null
+     */
+    public function getLicenseDetails()
+    {
+        if ($this->verifyLicense() !== true) {
+            return null;
+        }
+        
+        try {
+            $content = Storage::get('server.lic');
+            $data = json_decode(base64_decode($content), true);
+            return json_decode(base64_decode($data['payload']), true);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 }

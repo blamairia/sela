@@ -763,6 +763,13 @@ const baseRoutes = [
                     )
             },
 
+            // POS Terminal Management (Admin)
+            {
+                name: "pos_terminals",
+                path: "/admin/terminals",
+                component: () => import("./views/app/pages/settings/Terminals.vue")
+            },
+
             //Purchase
             {
                 path: "/app/purchases",

@@ -204,9 +204,19 @@ Route::group(['middleware' => ['web', 'auth:web', 'Is_Active']], function () {
 // ------------------------------------------------------------------\\
 // LICENSE ACTIVATION ROUTES (No auth required)
 Route::middleware(['web'])->group(function () {
-    Route::get('/license/activate', [\App\Http\Controllers\LicenseController::class, 'showActivation'])->name('license.activate');
-    Route::post('/license/activate', [\App\Http\Controllers\LicenseController::class, 'activate'])->name('license.activate.post');
-    Route::get('/license/check', [\App\Http\Controllers\LicenseController::class, 'check'])->name('license.check');
+    // Route::get('/license/activate', [\App\Http\Controllers\LicenseController::class, 'showActivation'])->name('license.activate');
+    // Route::post('/license/activate', [\App\Http\Controllers\LicenseController::class, 'activate'])->name('license.activate.post');
+    // Route::get('/license/check', [\App\Http\Controllers\LicenseController::class, 'check'])->name('license.check');
+    Route::get('/terminal/login', [\App\Http\Controllers\TerminalAuthController::class, 'handshake'])->name('terminal.login');
+});
+
+// ------------------------------------------------------------------\\
+// TERMINAL MANAGEMENT ROUTES (Admin Only)
+// ------------------------------------------------------------------\\
+Route::group(['middleware' => ['web', 'auth', 'Is_Active'], 'prefix' => 'admin/terminals'], function () {
+    Route::get('/', [\App\Http\Controllers\Admin\TerminalController::class, 'index'])->name('admin.terminals.index');
+    Route::post('/', [\App\Http\Controllers\Admin\TerminalController::class, 'store'])->name('admin.terminals.store');
+    Route::get('/delete/{id}', [\App\Http\Controllers\Admin\TerminalController::class, 'destroy'])->name('admin.terminals.delete');
 });
 
 // ------------------------------------------------------------------\\
@@ -231,7 +241,7 @@ Route::group(['middleware' => ['web', 'auth:web', 'Is_Active', 'request.safety']
             } else {
                 return view('layouts.master');
             }
-        })->where('vue', '^(?!api|setup|update|password|online_store|customer-display|quickbooks|license).*$');
+        })->where('vue', '^(?!api|setup|update|password|online_store|customer-display|quickbooks|license|terminal|admin).*$');
 
 });
 
