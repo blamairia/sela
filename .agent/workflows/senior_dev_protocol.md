@@ -49,3 +49,4 @@ description: Standard protocol for high-quality, tested feature development. Use
 *   Update `task.md` to [x].
 *   Clean up temporary test files (if needed).
 *   Ensure the codebase is stable for the next agent.
+*   **Release Readiness**: If this feature affects the build, consult `@[/distribution_build]` to ensure encoding/obfuscation configs are updated.

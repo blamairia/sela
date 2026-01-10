@@ -16,48 +16,68 @@ const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 
+const WebpackObfuscator = require('webpack-obfuscator');
+
 mix.js('resources/src/main.js', 'public')
     .js('resources/src/login.js', 'public')
     .js('resources/src/customer-display.js', 'public')
-    .vue()
+    .vue();
 
-    mix.webpackConfig({
-        resolve: {
-            alias: {
-                '@': __dirname + '/resources/src'
-            }
-        },
-        stats: {
-            children: true
-        },
-        output: {
-          
-            filename:'js/[name].min.js',
-            chunkFilename: 'js/bundle/[name].[hash].js',
-          },
-        module: {
-            rules: [
-                {
-                    test: /\.scss$/,
-                    use: [
-                        {
-                            loader: 'sass-loader',
-                            options: {
-                                sassOptions: {
-                                    quietDeps: true,
-                                    silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin', 'color-functions', 'slash-div']
-                                }
+mix.webpackConfig({
+    resolve: {
+        alias: {
+            '@': __dirname + '/resources/src'
+        }
+    },
+    stats: {
+        children: true
+    },
+    output: {
+
+        filename: 'js/[name].min.js',
+        chunkFilename: 'js/bundle/[name].[hash].js',
+    },
+    module: {
+        rules: [
+            {
+                test: /\.scss$/,
+                use: [
+                    {
+                        loader: 'sass-loader',
+                        options: {
+                            sassOptions: {
+                                quietDeps: true,
+                                silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin', 'color-functions', 'slash-div']
                             }
                         }
-                    ]
-                }
-            ]
-        },
+                    }
+                ]
+            }
+        ]
+    },
+    plugins: [
+        new MomentLocalesPlugin(),
+        new CleanWebpackPlugin({
+            cleanOnceBeforeBuildPatterns: ['./js/*']
+        }),
+    ]
+});
+
+if (mix.inProduction()) {
+    mix.webpackConfig({
         plugins: [
-            new MomentLocalesPlugin(),
-            new CleanWebpackPlugin({
-                cleanOnceBeforeBuildPatterns: ['./js/*']
-              }),
+            new WebpackObfuscator({
+                rotateStringArray: true,
+                stringArray: true,
+                stringArrayThreshold: 0.75,
+                compact: true,
+                controlFlowFlattening: true,
+                simplify: true,
+                stringArrayEncoding: ['base64', 'rc4'],
+                splitStrings: true,
+                identifierNamesGenerator: 'hexadecimal'
+            }, ['js/vendor.js']) // Exclude vendor if needed
         ]
     });
+}
 

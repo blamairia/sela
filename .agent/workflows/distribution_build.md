@@ -35,7 +35,16 @@ This workflow details the exact steps to transform the open-source Laravel app i
     *   Exclude `license_generator.php` (Don't ship the generator!).
     *   Exclude `private.key` (CRITICAL: NEVER SHIP THIS).
 
-## 3. 🛡️ Encoding (The "Ultimate PHP Encoder")
+## 3. 🕸️ Front-End Obfuscation (Vue/JS)
+**Goal**: Encrypt client-side logic to prevent reverse-engineering of the UI.
+*   **Command**:
+    ```bash
+    npm run prod
+    ```
+*   **Result**: This minifies and obfuscates files in `public/js/`.
+*   **Note**: Ensure `webpack-obfuscator` is installed (`npm install --save-dev webpack-obfuscator`) and configured in `webpack.mix.js`.
+
+## 4. 🛡️ Encoding (The "Ultimate PHP Encoder")
 **Goal**: Obfuscate the logic so the licensing check cannot be bypassed.
 
 1.  **Launch GUI**: Open "Ultimate PHP Encoder" (IonCube Wrapper).
@@ -50,7 +59,7 @@ This workflow details the exact steps to transform the open-source Laravel app i
     *   `vendor/`, `public/`, `resources/`, `storage/`, `bootstrap/`.
     *   `.env` (The installer will generate this, but for testing copy it).
 
-## 4. 🚀 Post-Encoding Setup
+## 5. 🚀 Post-Encoding Setup
 **Goal**: Configure the encoded app to run.
 
 1.  **Environment**:
@@ -66,7 +75,7 @@ This workflow details the exact steps to transform the open-source Laravel app i
     *   Ensure the web server has **Read** access to `server.lic`.
     *   Ensure the web server has **Write** access to `storage/logs`.
 
-## 5. 🧪 Verification Checklist
+## 6. 🧪 Verification Checklist
 *   [ ] Access `/license/check` -> Should return JSON or View (Not 403).
 *   [ ] Access Dashboard -> Should load if license is valid.
 *   [ ] Delete `server.lic` -> Access Dashboard -> Should show **403 Forbidden**.
