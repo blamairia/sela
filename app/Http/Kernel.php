@@ -52,7 +52,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \Laravel\Passport\Http\Middleware\CreateFreshApiToken::class,
-
+            \App\Http\Middleware\EnsureClientAuthorized::class,
         ],
 
         'store' => [
@@ -63,6 +63,7 @@ class Kernel extends HttpKernel
         'api' => [
             // 'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\EnsureClientAuthorized::class,
         ],
     ];
 
@@ -95,6 +96,7 @@ class Kernel extends HttpKernel
         'token.timeout' => \App\Http\Middleware\EnforceApiTokenTimeout::class,
         // License validation and integrity check
         'license.check' => \App\Http\Middleware\LicenseCheck::class,
+        'authorized.client' => \App\Http\Middleware\EnsureClientAuthorized::class,
 
     ];
 }
