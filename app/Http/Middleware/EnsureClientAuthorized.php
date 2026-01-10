@@ -17,6 +17,11 @@ class EnsureClientAuthorized
 
     public function handle($request, Closure $next)
     {
+        // 0. Exempt License Activation/Check Routes
+        if ($request->is('license/*') || $request->is('api/license/*')) {
+            return $next($request);
+        }
+
         // 1. GLOBAL CHECK: Is the Server License valid?
         // We might want to cache this result to avoid checking disk every request
         $licenseStatus = $this->licenseService->verifyLicense();
